@@ -131,7 +131,7 @@ public class GuiFluxConfiguratorHome extends GuiTabCore {
             if (button == apply) {
                 ///send changes to server.
                 NBTTagCompound tag = new NBTTagCompound();
-                tag.setInteger(FluxConfigurationType.NETWORK.getNBTName(), network.getNetworkID());
+                tag.setLong(FluxConfigurationType.NETWORK.getNBTName(), network.getNetworkID());
                 tag.setInteger(FluxConfigurationType.PRIORITY.getNBTName(), stackPriority);
                 tag.setLong(FluxConfigurationType.TRANSFER.getNBTName(), stackLimit);
                 tag.setBoolean(FluxConfigurationType.PRIORITY_SETTING.getNBTName(), stackSurgeMode);
@@ -169,7 +169,7 @@ public class GuiFluxConfiguratorHome extends GuiTabCore {
             apply.clickable = true;
         } else {
             apply.clickable =
-                    network.getNetworkID() != configTag.getInteger(FluxConfigurationType.NETWORK.getNBTName()) ||
+                    network.getNetworkID() != configTag.getLong(FluxConfigurationType.NETWORK.getNBTName()) ||
                             stackPriority != configTag.getInteger(FluxConfigurationType.PRIORITY.getNBTName()) ||
                             stackLimit != configTag.getLong(FluxConfigurationType.TRANSFER.getNBTName()) ||
                             stackSurgeMode != configTag.getBoolean(FluxConfigurationType.PRIORITY_SETTING.getNBTName()) ||

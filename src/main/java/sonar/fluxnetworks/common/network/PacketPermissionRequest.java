@@ -24,26 +24,26 @@ public class PacketPermissionRequest implements IMessageHandler<PacketPermission
 
     public static class PermissionRequestMessage implements IMessage {
 
-        public int networkID;
+        public long networkID;
         public UUID uuid;
 
         public PermissionRequestMessage() {
         }
 
-        public PermissionRequestMessage(int networkID, UUID uuid) {
+        public PermissionRequestMessage(long networkID, UUID uuid) {
             this.networkID = networkID;
             this.uuid = uuid;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            networkID = buf.readInt();
+            networkID = buf.readLong();
             uuid = new UUID(buf.readLong(), buf.readLong());
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
-            buf.writeInt(networkID);
+            buf.writeLong(networkID);
             buf.writeLong(uuid.getMostSignificantBits());
             buf.writeLong(uuid.getLeastSignificantBits());
         }

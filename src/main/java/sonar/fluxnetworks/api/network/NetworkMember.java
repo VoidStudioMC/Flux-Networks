@@ -6,8 +6,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.management.PlayerProfileCache;
 import net.minecraftforge.fml.common.FMLCommonHandler;
+import sonar.fluxnetworks.common.data.dto.NetworkMemberDTO;
 
 import java.util.UUID;
+
+import static sonar.fluxnetworks.common.data.TagConstants.CACHED_NAME;
+import static sonar.fluxnetworks.common.data.TagConstants.PLAYER_ACCESS;
+import static sonar.fluxnetworks.common.data.TagConstants.PLAYER_UUID;
 
 public class NetworkMember {
 
@@ -20,6 +25,12 @@ public class NetworkMember {
 
     public NetworkMember(NBTTagCompound nbt) {
         readNetworkNBT(nbt);
+    }
+
+    public NetworkMember(NetworkMemberDTO networkMemberDTO) {
+        this.playerUUID = networkMemberDTO.getPlayerUUID();
+        this.cachedName = networkMemberDTO.getCachedName();
+        this.accessPermission = AccessLevel.values()[networkMemberDTO.getPlayerAccess()];
     }
 
     public static NetworkMember createNetworkMember(EntityPlayer player, AccessLevel permissionLevel) {
@@ -72,15 +83,16 @@ public class NetworkMember {
     }
 
     public void readNetworkNBT(NBTTagCompound nbt) {
-        playerUUID = nbt.getUniqueId("playerUUID");
-        cachedName = nbt.getString("cachedName");
-        accessPermission = AccessLevel.values()[nbt.getByte("playerAccess")];
+        playerUUID = nbt.getUniqueId(PLAYER_UUID);
+        cachedName = nbt.getString(CACHED_NAME);
+        accessPermission = AccessLevel.values()[nbt.getByte(PLAYER_ACCESS)];
     }
 
     public NBTTagCompound writeNetworkNBT(NBTTagCompound nbt) {
-        nbt.setUniqueId("playerUUID", playerUUID);
-        nbt.setString("cachedName", cachedName);
-        nbt.setByte("playerAccess", (byte) accessPermission.ordinal());
+
+        nbt.setUniqueId(PLAYER_UUID, playerUUID);
+        nbt.setString(CACHED_NAME, cachedName);
+        nbt.setByte(PLAYER_ACCESS, (byte) accessPermission.ordinal());
         return nbt;
     }
 }

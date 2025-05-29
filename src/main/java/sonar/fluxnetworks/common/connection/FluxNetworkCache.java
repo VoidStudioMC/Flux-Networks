@@ -23,7 +23,7 @@ public class FluxNetworkCache {
     /**
      * Client Cache
      **/
-    public Map<Integer, IFluxNetwork> networks = new HashMap<>();
+    public Map<Long, IFluxNetwork> networks = new HashMap<>();
     public boolean superAdminClient = false;
 
     public void clearNetworks() {
@@ -55,14 +55,14 @@ public class FluxNetworkCache {
         return network;
     }
 
-    private int getUniqueID() {
+    private Long getUniqueID() {
         return FluxNetworkData.get().uniqueID++;
     }
 
     /**
      * Client Only
      **/
-    public void updateClientFromPacket(Map<Integer, NBTTagCompound> serverSideNetworks, NBTType type) {
+    public void updateClientFromPacket(Map<Long, NBTTagCompound> serverSideNetworks, NBTType type) {
         serverSideNetworks.forEach((i, n) -> {
             IFluxNetwork network = networks.get(i);
             if (type == NBTType.NETWORK_CLEAR) {
@@ -81,7 +81,7 @@ public class FluxNetworkCache {
         });
     }
 
-    public void updateClientConnections(int networkID, List<NBTTagCompound> tags) {
+    public void updateClientConnections(long networkID, List<NBTTagCompound> tags) {
         IFluxNetwork network = networks.get(networkID);
         if (network != null) {
             List<IFluxConnector> connectors = network.getSetting(NetworkSettings.ALL_CONNECTORS);
@@ -95,7 +95,7 @@ public class FluxNetworkCache {
     /**
      * Server Only
      **/
-    public IFluxNetwork getNetwork(int id) {
+    public IFluxNetwork getNetwork(long id) {
         return FluxNetworkData.get().networks.getOrDefault(id, FluxNetworkInvalid.instance);
     }
 
@@ -106,10 +106,14 @@ public class FluxNetworkCache {
         return FluxNetworkData.get().networks.values();
     }
 
+    public List<IFluxNetwork> getAllNetworksAsList() {
+        return new ArrayList<>(FluxNetworkData.get().networks.values());
+    }
+
     /**
      * Client Only
      **/
-    public IFluxNetwork getClientNetwork(int id) {
+    public IFluxNetwork getClientNetwork(long id) {
         return networks.getOrDefault(id, FluxNetworkInvalid.instance);
     }
 

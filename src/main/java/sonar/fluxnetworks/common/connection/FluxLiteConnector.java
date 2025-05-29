@@ -2,20 +2,37 @@ package sonar.fluxnetworks.common.connection;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
+import sonar.fluxnetworks.FluxNetworks;
 import sonar.fluxnetworks.api.network.ConnectionType;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.api.network.ITransferHandler;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.utils.Coord4D;
 import sonar.fluxnetworks.api.utils.NBTType;
+import sonar.fluxnetworks.common.data.dto.FluxConnectorDTO;
 
 import java.util.UUID;
 
+import static sonar.fluxnetworks.common.data.TagConstants.BUFFER;
+import static sonar.fluxnetworks.common.data.TagConstants.CHANGE;
+import static sonar.fluxnetworks.common.data.TagConstants.D_LIMIT;
+import static sonar.fluxnetworks.common.data.TagConstants.FOLDER_ID;
+import static sonar.fluxnetworks.common.data.TagConstants.FORCED_CHUNK;
+import static sonar.fluxnetworks.common.data.TagConstants.IS_CHUNK_LOADED;
+import static sonar.fluxnetworks.common.data.TagConstants.LIMIT;
+import static sonar.fluxnetworks.common.data.TagConstants.NAME;
+import static sonar.fluxnetworks.common.data.TagConstants.N_ID;
+import static sonar.fluxnetworks.common.data.TagConstants.PRIORITY;
+import static sonar.fluxnetworks.common.data.TagConstants.SURGE;
+import static sonar.fluxnetworks.common.data.TagConstants.TYPE;
+
 public class FluxLiteConnector implements IFluxConnector {
 
-    public int networkID;
+    public long networkID;
     public int priority;
     public UUID playerUUID;
     public ConnectionType connectionType;
@@ -49,24 +66,50 @@ public class FluxLiteConnector implements IFluxConnector {
         this.stack = tile.getDisplayStack();
     }
 
+    public FluxLiteConnector(FluxConnectorDTO dto) {
+        this.networkID = dto.getN_id();
+        this.priority = dto.getPriority();
+        this.connectionType = ConnectionType.values()[dto.getType()];
+        this.limit = dto.getLimit();
+        this.coord4D = new Coord4D(dto.getX(), dto.getY(), dto.getZ(), dto.getDimension());
+        this.folderID = dto.getFolder_id();
+        this.customName = dto.getName();
+        this.surgeMode = dto.getSurge();
+        this.disableLimit = dto.getDisableLimit();
+        this.isChunkLoaded = dto.getChunkLoaded();
+        this.buffer = dto.getBuffer();
+        this.change = dto.getChange();
+        this.chunkLoading = dto.getForcedChunk();
+        if (dto.getTag() != null &&  !dto.getTag().isEmpty()) {
+            try {
+                new ItemStack(JsonToNBT.getTagFromJson(dto.getTag()));
+            } catch (NBTException e) {
+                this.stack = ItemStack.EMPTY;
+                FluxNetworks.logger.error(e.getMessage());
+            }
+        } else {
+            this.stack = ItemStack.EMPTY;
+        }
+    }
+
     public FluxLiteConnector(NBTTagCompound tag) {
         readCustomNBT(tag, NBTType.ALL_SAVE);
     }
 
     public static NBTTagCompound writeCustomNBT(IFluxConnector tile, NBTTagCompound tag) {
         tile.getCoords().write(tag);
-        tag.setInteger("type", tile.getConnectionType().ordinal());
-        tag.setInteger("n_id", tile.getNetworkID());
-        tag.setInteger("priority", tile.getRawPriority());
-        tag.setInteger("folder_id", tile.getFolderID());
-        tag.setLong("limit", tile.getRawLimit());
-        tag.setString("name", tile.getCustomName());
-        tag.setBoolean("dLimit", tile.getDisableLimit());
-        tag.setBoolean("surge", tile.getSurgeMode());
-        tag.setBoolean("isChunkLoaded", tile.isChunkLoaded());
-        tag.setLong("buffer", tile.getTransferBuffer());
-        tag.setLong("change", tile.getTransferChange());
-        tag.setBoolean("forcedChunk", tile.isForcedLoading());
+        tag.setInteger(TYPE, tile.getConnectionType().ordinal());
+        tag.setLong(N_ID, tile.getNetworkID());
+        tag.setInteger(PRIORITY, tile.getRawPriority());
+        tag.setInteger(FOLDER_ID, tile.getFolderID());
+        tag.setLong(LIMIT, tile.getRawLimit());
+        tag.setString(NAME, tile.getCustomName());
+        tag.setBoolean(D_LIMIT, tile.getDisableLimit());
+        tag.setBoolean(SURGE, tile.getSurgeMode());
+        tag.setBoolean(IS_CHUNK_LOADED, tile.isChunkLoaded());
+        tag.setLong(BUFFER, tile.getTransferBuffer());
+        tag.setLong(CHANGE, tile.getTransferChange());
+        tag.setBoolean(FORCED_CHUNK, tile.isForcedLoading());
         tile.getDisplayStack().writeToNBT(tag);
         return tag;
     }
@@ -74,18 +117,18 @@ public class FluxLiteConnector implements IFluxConnector {
     @Override
     public NBTTagCompound writeCustomNBT(NBTTagCompound tag, NBTType type) {
         coord4D.write(tag);
-        tag.setInteger("type", connectionType.ordinal());
-        tag.setInteger("n_id", networkID);
-        tag.setInteger("priority", priority);
-        tag.setInteger("folder_id", folderID);
-        tag.setLong("limit", limit);
-        tag.setString("name", customName);
-        tag.setBoolean("dLimit", disableLimit);
-        tag.setBoolean("surge", surgeMode);
-        tag.setBoolean("isChunkLoaded", isChunkLoaded);
-        tag.setLong("buffer", buffer);
-        tag.setLong("change", change);
-        tag.setBoolean("forcedChunk", chunkLoading);
+        tag.setInteger(TYPE, connectionType.ordinal());
+        tag.setLong(N_ID, networkID);
+        tag.setInteger(PRIORITY, priority);
+        tag.setInteger(FOLDER_ID, folderID);
+        tag.setLong(LIMIT, limit);
+        tag.setString(NAME, customName);
+        tag.setBoolean(D_LIMIT, disableLimit);
+        tag.setBoolean(SURGE, surgeMode);
+        tag.setBoolean(IS_CHUNK_LOADED, isChunkLoaded);
+        tag.setLong(BUFFER, buffer);
+        tag.setLong(CHANGE, change);
+        tag.setBoolean(FORCED_CHUNK, chunkLoading);
         stack.writeToNBT(tag);
         return tag;
     }
@@ -93,23 +136,23 @@ public class FluxLiteConnector implements IFluxConnector {
     @Override
     public void readCustomNBT(NBTTagCompound tag, NBTType type) {
         coord4D = new Coord4D(tag);
-        connectionType = ConnectionType.values()[tag.getInteger("type")];
-        networkID = tag.getInteger("n_id");
-        priority = tag.getInteger("priority");
-        folderID = tag.getInteger("folder_id");
-        limit = tag.getLong("limit");
-        customName = tag.getString("name");
-        disableLimit = tag.getBoolean("dLimit");
-        surgeMode = tag.getBoolean("surge");
-        isChunkLoaded = tag.getBoolean("isChunkLoaded");
-        buffer = tag.getLong("buffer");
-        change = tag.getLong("change");
-        chunkLoading = tag.getBoolean("forcedChunk");
+        connectionType = ConnectionType.values()[tag.getInteger(TYPE)];
+        networkID = tag.getLong(N_ID);
+        priority = tag.getInteger(PRIORITY);
+        folderID = tag.getInteger(FOLDER_ID);
+        limit = tag.getLong(LIMIT);
+        customName = tag.getString(NAME);
+        disableLimit = tag.getBoolean(D_LIMIT);
+        surgeMode = tag.getBoolean(SURGE);
+        isChunkLoaded = tag.getBoolean(IS_CHUNK_LOADED);
+        buffer = tag.getLong(BUFFER);
+        change = tag.getLong(CHANGE);
+        chunkLoading = tag.getBoolean(FORCED_CHUNK);
         stack = new ItemStack(tag);
     }
 
     @Override
-    public int getNetworkID() {
+    public long getNetworkID() {
         return networkID;
     }
 

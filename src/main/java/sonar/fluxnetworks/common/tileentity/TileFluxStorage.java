@@ -116,7 +116,7 @@ public class TileFluxStorage extends TileFluxCore implements IFluxStorage, IBigP
 
         NBTTagCompound subTag = new NBTTagCompound();
         subTag.setLong("energy", getTransferBuffer());
-        subTag.setInteger(FluxNetworkData.NETWORK_ID, networkID);
+        subTag.setLong(FluxNetworkData.NETWORK_ID, networkID);
 
         tag.setTag(FluxUtils.FLUX_DATA, subTag);
         tag.setBoolean(FluxUtils.GUI_COLOR, true);

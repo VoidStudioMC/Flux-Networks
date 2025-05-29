@@ -110,7 +110,7 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
 
     public static class BatchEditingMessage implements IMessage {
 
-        public int networkID;
+        public long networkID;
         public List<Coord4D> coord4DS = new ArrayList<>();
         public NBTTagCompound tag;
         public boolean[] editions = new boolean[7];
@@ -118,7 +118,7 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
         public BatchEditingMessage() {
         }
 
-        public BatchEditingMessage(int networkID, List<Coord4D> coord4DS, NBTTagCompound tag, boolean[] editions) {
+        public BatchEditingMessage(long networkID, List<Coord4D> coord4DS, NBTTagCompound tag, boolean[] editions) {
             this.networkID = networkID;
             this.coord4DS = coord4DS;
             this.tag = tag;
@@ -127,7 +127,7 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            networkID = buf.readInt();
+            networkID = buf.readLong();
             for (int i = 0; i < 7; i++) {
                 editions[i] = buf.readBoolean();
             }
@@ -140,7 +140,7 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
 
         @Override
         public void toBytes(ByteBuf buf) {
-            buf.writeInt(networkID);
+            buf.writeLong(networkID);
             for (Boolean b : editions) {
                 buf.writeBoolean(b);
             }

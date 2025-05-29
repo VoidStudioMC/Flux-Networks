@@ -1,12 +1,30 @@
 package sonar.fluxnetworks;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import net.minecraftforge.common.ForgeChunkManager;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import org.bson.Document;
+import org.bson.codecs.UuidCodec;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import sonar.fluxnetworks.common.data.dto.FluxNetworkDataDTO;
+import sonar.fluxnetworks.common.data.codecs.ChunkPosCodec;
+import sonar.fluxnetworks.common.data.codecs.FluxConnectorCodec;
+import sonar.fluxnetworks.common.data.codecs.FluxNetworkCodecProvider;
+import sonar.fluxnetworks.common.data.codecs.FluxNetworkDataCodecProvider;
+import sonar.fluxnetworks.common.data.codecs.NetworkMemberCodecProvider;
 import sonar.fluxnetworks.common.handler.ItemEnergyHandler;
 import sonar.fluxnetworks.common.handler.TileEntityHandler;
 
 import java.io.File;
+import java.util.UUID;
+
+import static sonar.fluxnetworks.common.data.TagConstants.INDEX_FIELD;
 
 public class FluxConfig {
 
@@ -17,12 +35,21 @@ public class FluxConfig {
     public static final String ENERGY = "energy";
     public static final String NETWORKS = "networks";
     public static final String BLACKLIST = "blacklists";
+    public static final String DATABASE = "database";
+
+    public static MongoCollection<FluxNetworkDataDTO> MONGO_COLLECTION;
 
     public static boolean enableButtonSound, enableOneProbeBasicInfo, enableOneProbeAdvancedInfo, enableOneProbeSneaking;
     public static boolean enableFluxRecipe, enableOldRecipe, enableChunkLoading, enableSuperAdmin;
     public static int defaultLimit, basicCapacity, basicTransfer, herculeanCapacity, herculeanTransfer, gargantuanCapacity, gargantuanTransfer;
     public static int maximumPerPlayer, superAdminRequiredPermission;
     public static String[] blockBlacklistStrings, itemBlackListStrings;
+    public static UUID MONGO_SERVER_ID;
+    private static MongoClient MONGO_CLIENT;
+    private static MongoDatabase MONGO_DB;
+    private static String MONGO_URL;
+    private static String MONGO_DB_NAME;
+    private static String MONGO_COLLECTION_NAME;
 
     public static void init(File file) {
         config = new Configuration(new File(file.getPath(), "flux_networks.cfg"));
@@ -31,6 +58,23 @@ public class FluxConfig {
         verifyAndReadBlacklist();
         config.save();
         generateFluxChunkConfig();
+        connectToDB();
+    }
+
+    private static void connectToDB(){
+        MONGO_CLIENT = MongoClients.create(MONGO_URL);
+        ChunkPosCodec chunkPosCodec = new ChunkPosCodec();
+        UuidCodec uuidCodec = new UuidCodec();
+        FluxConnectorCodec fluxConnectorCodec = new FluxConnectorCodec();
+        CodecRegistry codecRegistry = CodecRegistries.fromRegistries(CodecRegistries.fromRegistries(
+                CodecRegistries.fromCodecs(chunkPosCodec, uuidCodec, fluxConnectorCodec),
+                CodecRegistries.fromProviders(new FluxNetworkCodecProvider(), new FluxNetworkDataCodecProvider(), new NetworkMemberCodecProvider()),
+                MongoClientSettings.getDefaultCodecRegistry()));
+        MONGO_DB = MONGO_CLIENT.getDatabase(MONGO_DB_NAME);
+        MONGO_COLLECTION = MONGO_DB.getCollection(MONGO_COLLECTION_NAME, FluxNetworkDataDTO.class).withCodecRegistry(codecRegistry);
+        if (MONGO_COLLECTION.countDocuments(new Document(INDEX_FIELD, MONGO_SERVER_ID)) < 1) {
+            MONGO_COLLECTION.insertOne(new FluxNetworkDataDTO(MONGO_SERVER_ID));
+        }
     }
 
     public static void verifyAndReadBlacklist() {
@@ -85,6 +129,7 @@ public class FluxConfig {
     }
 
     public static void read() {
+
         defaultLimit = config.getInt("Default Transfer Limit", ENERGY, 800000, 0, Integer.MAX_VALUE, "The default transfer limit of a flux connector");
 
         basicCapacity = config.getInt("Basic Storage Capacity", ENERGY, 1000000, 0, Integer.MAX_VALUE, "");
@@ -101,6 +146,11 @@ public class FluxConfig {
         enableFluxRecipe = config.getBoolean("Enable Flux Recipe", GENERAL, true, "Enables redstones being compressed with the bedrock and obsidian to get flux");
         enableOldRecipe = config.getBoolean("Enable Old Recipe", GENERAL, false, "Enables redstone being turned into Flux when dropped in fire. (Need \"Enable Flux Recipe\" = true, so the default recipe can't be disabled if turns this on)");
         enableChunkLoading = config.getBoolean("Allow Flux Chunk Loading", GENERAL, true, "Allows flux tiles to work as chunk loaders");
+
+        MONGO_URL = config.getString("Url to connect to mongo instance", DATABASE, "mongodb://localhost:27017", "");
+        MONGO_DB_NAME = config.getString("Mongo database name", DATABASE, "local", "");
+        MONGO_COLLECTION_NAME = config.getString("Mongo collection name", DATABASE, "networks", "");
+        MONGO_SERVER_ID = UUID.fromString(config.getString("Unique server id for multi-server features", DATABASE, UUID.randomUUID().toString(), "Do not change this value unless you want to lose all network data!"));
 
         enableButtonSound = config.getBoolean("Enable GUI Button Sound", CLIENT, true, "Enable navigation buttons sound when pressing it");
         enableOneProbeBasicInfo = config.getBoolean("Enable Basic One Probe Info", CLIENT, true, "Displays: Network Name, Live Transfer Rate & Internal Buffer");

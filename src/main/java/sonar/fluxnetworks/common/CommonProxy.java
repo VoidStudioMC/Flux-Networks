@@ -65,7 +65,7 @@ public class CommonProxy {
     public boolean baublesLoaded;
     public boolean ocLoaded;
 
-    public int admin_viewing_network_id = -1;
+    public long admin_viewing_network_id = -1;
     public boolean detailed_network_view;
     public IFluxNetwork admin_viewing_network = FluxNetworkInvalid.instance;
 
@@ -192,7 +192,11 @@ public class CommonProxy {
     public void onPlayerJoined(PlayerEvent.PlayerLoggedInEvent event) {
         EntityPlayer player = event.player;
         if (!player.world.isRemote) {
-            PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(new ArrayList<>(FluxNetworkCache.instance.getAllNetworks()), NBTType.NETWORK_GENERAL), (EntityPlayerMP) player);
+            PacketNetworkUpdate.NetworkUpdateMessage networkUpdateMessage =
+                    new PacketNetworkUpdate.NetworkUpdateMessage(
+                            FluxNetworkCache.instance.getAllNetworksAsList(), NBTType.NETWORK_GENERAL
+                    );
+            PacketHandler.network.sendTo(networkUpdateMessage, (EntityPlayerMP) player);
             PacketHandler.network.sendTo(new PacketSuperAdmin.SuperAdminMessage(DefaultSuperAdmin.isPlayerSuperAdmin(player)), (EntityPlayerMP) player);
         }
     }
@@ -218,7 +222,7 @@ public class CommonProxy {
     public void setFeedback(EnumFeedbackInfo info, boolean operation) {
     }
 
-    public void receiveColorCache(Map<Integer, Tuple<Integer, String>> cache) {
+    public void receiveColorCache(Map<Long, Tuple<Integer, String>> cache) {
     }
 
     public EntityPlayer getPlayer(MessageContext ctx) {

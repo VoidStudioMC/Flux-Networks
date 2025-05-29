@@ -37,21 +37,21 @@ public class PacketConnectionUpdateRequest implements IMessageHandler<PacketConn
 
     public static class ConnectionRequestMessage implements IMessage {
 
-        public int networkID;
+        public long networkID;
         public List<Coord4D> coords = new ArrayList<>();
 
         public ConnectionRequestMessage() {
 
         }
 
-        public ConnectionRequestMessage(int networkID, List<Coord4D> coords) {
+        public ConnectionRequestMessage(long networkID, List<Coord4D> coords) {
             this.networkID = networkID;
             this.coords = coords;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            networkID = buf.readInt();
+            networkID = buf.readLong();
             int size = buf.readInt();
             for (int i = 0; i < size; i++) {
                 coords.add(new Coord4D(buf));
@@ -60,7 +60,7 @@ public class PacketConnectionUpdateRequest implements IMessageHandler<PacketConn
 
         @Override
         public void toBytes(ByteBuf buf) {
-            buf.writeInt(networkID);
+            buf.writeLong(networkID);
             buf.writeInt(coords.size());
             coords.forEach(c -> c.write(buf));
         }

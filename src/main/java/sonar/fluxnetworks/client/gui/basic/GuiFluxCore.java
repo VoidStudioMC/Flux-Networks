@@ -179,7 +179,7 @@ public abstract class GuiFluxCore extends GuiPopUpHost {
     public void onSuperAdminChanged() {
     }
 
-    public void setConnectedNetwork(int networkID, String password) {
+    public void setConnectedNetwork(long networkID, String password) {
         if (connector instanceof IFluxConnector) {
             PacketHandler.network.sendToServer(new PacketTile.TileMessage(PacketTileType.SET_NETWORK, PacketTileHandler.getSetNetworkPacket(networkID, password), ((IFluxConnector) connector).getCoords().getPos(), ((IFluxConnector) connector).getCoords().getDimension()));
         }

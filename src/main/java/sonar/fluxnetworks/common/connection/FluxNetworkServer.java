@@ -40,7 +40,7 @@ public class FluxNetworkServer extends FluxNetworkBase {
         super();
     }
 
-    public FluxNetworkServer(int id, String name, SecurityType security, int color, UUID owner, EnergyType energy, String password) {
+    public FluxNetworkServer(Long id, String name, SecurityType security, int color, UUID owner, EnergyType energy, String password) {
         super(id, name, security, color, owner, energy, password);
     }
 

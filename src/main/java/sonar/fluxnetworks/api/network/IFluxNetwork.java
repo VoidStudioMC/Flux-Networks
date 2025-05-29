@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface IFluxNetwork {
 
-    default int getNetworkID() {
+    default long getNetworkID() {
         return getSetting(NetworkSettings.NETWORK_ID);
     }
 

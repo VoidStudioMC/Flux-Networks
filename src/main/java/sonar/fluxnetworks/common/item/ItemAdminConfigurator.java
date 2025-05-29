@@ -40,7 +40,7 @@ public class ItemAdminConfigurator extends ItemConfigurator {
     public static class AdminConnector implements INetworkConnector {
 
         @Override
-        public int getNetworkID() {
+        public long getNetworkID() {
             return FluxNetworks.proxy.admin_viewing_network_id;
         }
 

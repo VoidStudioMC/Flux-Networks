@@ -76,14 +76,15 @@ public class RegistryRecipes {
         @Nonnull
         @Override
         public ItemStack getCraftingResult(@Nonnull InventoryCrafting crafting) {
-            int energyTotal = 0, networkID = 0;
+            int energyTotal = 0;
+            long networkID = 0;
             boolean firstFound = false;
             for (int i = 0; i < crafting.getSizeInventory(); i++) {
                 ItemStack stack = crafting.getStackInSlot(i);
                 NBTTagCompound subTag = stack.getSubCompound(FluxUtils.FLUX_DATA);
                 if (subTag != null) {
                     if (!firstFound) {
-                        networkID = subTag.getInteger(FluxNetworkData.NETWORK_ID);
+                        networkID = subTag.getLong(FluxNetworkData.NETWORK_ID);
                         firstFound = true;
                     }
                     energyTotal += subTag.getLong("energy");
@@ -92,7 +93,7 @@ public class RegistryRecipes {
             if (firstFound) {
                 ItemStack stack = output.copy();
                 NBTTagCompound subTag = stack.getOrCreateSubCompound(FluxUtils.FLUX_DATA);
-                subTag.setInteger(FluxNetworkData.NETWORK_ID, networkID);
+                subTag.setLong(FluxNetworkData.NETWORK_ID, networkID);
                 subTag.setLong("energy", energyTotal);
                 return stack;
             }

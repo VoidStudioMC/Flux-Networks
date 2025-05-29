@@ -42,7 +42,7 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     public HashSet<EntityPlayer> playerUsing = new HashSet<>();
 
     public String customName = "";
-    public int networkID = -1;
+    public long networkID = -1;
     public UUID playerUUID = FluxUtils.UUID_DEFAULT;
     public int color = -1;
     public int folderID = -1;
@@ -132,7 +132,7 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     }
 
     @Override
-    public int getNetworkID() {
+    public long getNetworkID() {
         return networkID;
     }
 
@@ -182,7 +182,7 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
             tag.setLong("1", limit);
             tag.setBoolean("2", disableLimit);
             tag.setBoolean("3", surgeMode);
-            tag.setInteger("4", networkID);
+            tag.setLong("4", networkID);
             tag.setUniqueId("5", playerUUID);
             tag.setString("6", customName);
             tag.setInteger("7", color);
@@ -198,7 +198,7 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
             tag.setLong(ItemFluxConnector.LIMIT, limit);
             tag.setBoolean(ItemFluxConnector.DISABLE_LIMIT, disableLimit);
             tag.setBoolean(ItemFluxConnector.SURGE_MODE, surgeMode);
-            tag.setInteger(FluxNetworkData.NETWORK_ID, networkID);
+            tag.setLong(FluxNetworkData.NETWORK_ID, networkID);
             tag.setString(ItemFluxConnector.CUSTOM_NAME, customName);
             tag.setInteger(NetworkFolder.FOLDER_ID, folderID);
         }
@@ -229,8 +229,8 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
             limit = (l = tag.getLong(ItemFluxConnector.LIMIT)) > 0 ? l : limit;
             disableLimit = tag.getBoolean(ItemFluxConnector.DISABLE_LIMIT);
             surgeMode = tag.getBoolean(ItemFluxConnector.SURGE_MODE);
-            int i;
-            networkID = (i = tag.getInteger(FluxNetworkData.NETWORK_ID)) > 0 ? i : networkID;
+            long i;
+            networkID = (i = tag.getLong(FluxNetworkData.NETWORK_ID)) > 0 ? i : networkID;
             String name;
             customName = (name = tag.getString(ItemFluxConnector.CUSTOM_NAME)).isEmpty() ? customName : name;
             folderID = tag.getInteger(NetworkFolder.FOLDER_ID);

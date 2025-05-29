@@ -18,9 +18,9 @@ public class PacketColorRequest implements IMessageHandler<PacketColorRequest.Co
 
     @Override
     public IMessage onMessage(ColorRequestMessage message, MessageContext ctx) {
-        Map<Integer, Tuple<Integer, String>> cache = new HashMap<>();
+        Map<Long, Tuple<Integer, String>> cache = new HashMap<>();
         if (!message.requests.isEmpty()) {
-            for (int id : message.requests) {
+            for (long id : message.requests) {
                 IFluxNetwork network = FluxNetworkCache.instance.getNetwork(id);
                 cache.put(id, new Tuple<>(network.getSetting(NetworkSettings.NETWORK_COLOR) | 0xff000000, network.isInvalid() ? "NONE" : network.getSetting(NetworkSettings.NETWORK_NAME)));
             } // More than one
@@ -31,12 +31,12 @@ public class PacketColorRequest implements IMessageHandler<PacketColorRequest.Co
 
     public static class ColorRequestMessage implements IMessage {
 
-        List<Integer> requests;
+        List<Long> requests;
 
         public ColorRequestMessage() {
         }
 
-        public ColorRequestMessage(List<Integer> requests) {
+        public ColorRequestMessage(List<Long> requests) {
             this.requests = requests;
         }
 
@@ -45,14 +45,14 @@ public class PacketColorRequest implements IMessageHandler<PacketColorRequest.Co
             requests = new ArrayList<>();
             int size = buf.readInt();
             for (int i = 0; i < size; i++) {
-                requests.add(buf.readInt());
+                requests.add(buf.readLong());
             }
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
             buf.writeInt(requests.size());
-            requests.forEach(buf::writeInt);
+            requests.forEach(buf::writeLong);
         }
     }
 }

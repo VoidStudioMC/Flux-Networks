@@ -21,12 +21,12 @@ public class PacketColorCache implements IMessageHandler<PacketColorCache.ColorC
 
     public static class ColorCacheMessage implements IMessage {
 
-        public Map<Integer, Tuple<Integer, String>> cache;
+        public Map<Long, Tuple<Integer, String>> cache;
 
         public ColorCacheMessage() {
         }
 
-        public ColorCacheMessage(Map<Integer, Tuple<Integer, String>> cache) {
+        public ColorCacheMessage(Map<Long, Tuple<Integer, String>> cache) {
             this.cache = cache;
         }
 
@@ -35,7 +35,7 @@ public class PacketColorCache implements IMessageHandler<PacketColorCache.ColorC
             cache = new HashMap<>();
             int size = buf.readInt();
             for (int i = 0; i < size; i++) {
-                int id = buf.readInt();
+                long id = buf.readLong();
                 int colour = buf.readInt();
                 String name = ByteBufUtils.readUTF8String(buf);
                 cache.put(id, new Tuple<>(colour, name));
@@ -46,7 +46,7 @@ public class PacketColorCache implements IMessageHandler<PacketColorCache.ColorC
         public void toBytes(ByteBuf buf) {
             buf.writeInt(cache.size());
             cache.forEach((ID, DETAILS) -> {
-                buf.writeInt(ID);
+                buf.writeLong(ID);
                 buf.writeInt(DETAILS.getFirst());
                 ByteBufUtils.writeUTF8String(buf, DETAILS.getSecond());
             });

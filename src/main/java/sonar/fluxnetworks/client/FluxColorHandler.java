@@ -38,10 +38,10 @@ public class FluxColorHandler implements IBlockColor, IItemColor {
 
     public static final int DEFAULT_COLOR = FluxUtils.getIntFromColor(41, 94, 138);
     public static final int NO_NETWORK_COLOR = FluxUtils.getIntFromColor(178, 178, 178);
-    public static final Map<Integer, Integer> colorCache = new HashMap<>();
-    public static final Map<Integer, String> nameCache = new HashMap<>();
-    private static final List<Integer> requests = new ArrayList<>();
-    private static final List<Integer> sent_requests = new ArrayList<>();
+    public static final Map<Long, Integer> colorCache = new HashMap<>();
+    public static final Map<Long, String> nameCache = new HashMap<>();
+    private static final List<Long> requests = new ArrayList<>();
+    private static final List<Long> sent_requests = new ArrayList<>();
 
     public static void reset() {
         colorCache.clear();
@@ -49,25 +49,25 @@ public class FluxColorHandler implements IBlockColor, IItemColor {
         requests.clear();
     }
 
-    public static void loadColorCache(int id, int color) {
+    public static void loadColorCache(long id, int color) {
         if (id != -1) {
             colorCache.put(id, color);
         }
     }
 
-    public static void loadNameCache(int id, String name) {
+    public static void loadNameCache(long id, String name) {
         if (id != -1) {
             nameCache.put(id, name);
         }
     }
 
-    public static void placeRequest(int id) {
+    public static void placeRequest(long id) {
         if (id != -1 && !requests.contains(id) && !sent_requests.contains(id)) {
             requests.add(id);
         }
     }
 
-    public static int getOrRequestNetworkColor(int id) {
+    public static int getOrRequestNetworkColor(long id) {
         if (id == -1) {
             return NO_NETWORK_COLOR;
         }
@@ -79,7 +79,7 @@ public class FluxColorHandler implements IBlockColor, IItemColor {
         return NO_NETWORK_COLOR;
     }
 
-    public static String getOrRequestNetworkName(int id) {
+    public static String getOrRequestNetworkName(long id) {
         if (id == -1) {
             return "NONE";
         }
@@ -105,7 +105,7 @@ public class FluxColorHandler implements IBlockColor, IItemColor {
         }
     }
 
-    public static void receiveCache(Map<Integer, Tuple<Integer, String>> cache) {
+    public static void receiveCache(Map<Long, Tuple<Integer, String>> cache) {
         cache.forEach((ID, DETAILS) -> {
             loadColorCache(ID, DETAILS.getFirst());
             loadNameCache(ID, DETAILS.getSecond());
@@ -160,7 +160,7 @@ public class FluxColorHandler implements IBlockColor, IItemColor {
             }
             NBTTagCompound tag = stack.getSubCompound(FluxUtils.CONFIGS_TAG);
             if (tag != null) {
-                return getOrRequestNetworkColor(tag.getInteger(FluxConfigurationType.NETWORK.getNBTName()));
+                return getOrRequestNetworkColor(tag.getLong(FluxConfigurationType.NETWORK.getNBTName()));
             }
             return NO_NETWORK_COLOR;
         }

@@ -96,6 +96,7 @@ dependencies {
 
     implementation fg.deobf("mcjty.theoneprobe:TheOneProbe-1.12:${top_version}")
 
+    implementation group: 'org.mongodb', name: 'mongodb-driver-sync', version: '3.12.10'
     implementation fg.deobf("li.cil.oc:OpenComputers:MC${minecraft_version}-1.7.5.213:api")
 
     implementation fg.deobf("curse.maven:baubles-227083:2518667")

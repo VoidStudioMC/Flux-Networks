@@ -16,15 +16,15 @@ import sonar.fluxnetworks.common.tileentity.TileFluxCore;
 
 public class PacketTileHandler {
 
-    public static NBTTagCompound getSetNetworkPacket(int id, String password) {
+    public static NBTTagCompound getSetNetworkPacket(long id, String password) {
         NBTTagCompound tag = new NBTTagCompound();
-        tag.setInteger(FluxNetworkData.NETWORK_ID, id);
+        tag.setLong(FluxNetworkData.NETWORK_ID, id);
         tag.setString(FluxNetworkData.NETWORK_PASSWORD, password);
         return tag;
     }
 
     public static IMessage handleSetNetworkPacket(TileFluxCore tile, EntityPlayer player, NBTTagCompound tag) {
-        int id = tag.getInteger(FluxNetworkData.NETWORK_ID);
+        long id = tag.getLong(FluxNetworkData.NETWORK_ID);
         String pass = tag.getString(FluxNetworkData.NETWORK_PASSWORD);
         if (tile.getNetworkID() == id) {
             return null;

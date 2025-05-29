@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public abstract class FluxNetworkBase implements IFluxNetwork {
 
-    public ICustomValue<Integer> network_id = new CustomValue<>();
+    public ICustomValue<Long> network_id = new CustomValue<>();
     public ICustomValue<String> network_name = new CustomValue<>();
     public ICustomValue<UUID> network_owner = new CustomValue<>();
     public ICustomValue<SecurityType> network_security = new CustomValue<>();
@@ -31,7 +31,7 @@ public abstract class FluxNetworkBase implements IFluxNetwork {
     public FluxNetworkBase() {
     }
 
-    public FluxNetworkBase(int id, String name, SecurityType security, int color, UUID owner, EnergyType energy, String password) {
+    public FluxNetworkBase(long id, String name, SecurityType security, int color, UUID owner, EnergyType energy, String password) {
         network_id.setValue(id);
         network_name.setValue(name);
         network_security.setValue(security);
@@ -54,7 +54,7 @@ public abstract class FluxNetworkBase implements IFluxNetwork {
     @Override
     public void readNetworkNBT(NBTTagCompound nbt, NBTType type) {
         if (type == NBTType.NETWORK_GENERAL || type == NBTType.ALL_SAVE) {
-            network_id.setValue(nbt.getInteger(FluxNetworkData.NETWORK_ID));
+            network_id.setValue(nbt.getLong(FluxNetworkData.NETWORK_ID));
             network_name.setValue(nbt.getString(FluxNetworkData.NETWORK_NAME));
             network_owner.setValue(nbt.getUniqueId(FluxNetworkData.OWNER_UUID));
             network_security.setValue(SecurityType.values()[nbt.getInteger(FluxNetworkData.SECURITY_TYPE)]);
@@ -84,7 +84,7 @@ public abstract class FluxNetworkBase implements IFluxNetwork {
     @Override
     public void writeNetworkNBT(NBTTagCompound nbt, NBTType type) {
         if (type == NBTType.NETWORK_GENERAL || type == NBTType.ALL_SAVE) {
-            nbt.setInteger(FluxNetworkData.NETWORK_ID, network_id.getValue());
+            nbt.setLong(FluxNetworkData.NETWORK_ID, network_id.getValue());
             nbt.setString(FluxNetworkData.NETWORK_NAME, network_name.getValue());
             nbt.setUniqueId(FluxNetworkData.OWNER_UUID, network_owner.getValue());
             nbt.setInteger(FluxNetworkData.SECURITY_TYPE, network_security.getValue().ordinal());

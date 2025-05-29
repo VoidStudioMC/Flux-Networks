@@ -4,10 +4,23 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import sonar.fluxnetworks.common.data.dto.FluxConnectorDTO;
+
+import static sonar.fluxnetworks.common.data.TagConstants.DIMENSION;
+import static sonar.fluxnetworks.common.data.TagConstants.X;
+import static sonar.fluxnetworks.common.data.TagConstants.Y;
+import static sonar.fluxnetworks.common.data.TagConstants.Z;
 
 public class Coord4D {
 
     private int x, y, z, dimension;
+
+    public Coord4D(int x, int y, int z, int dimension) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.dimension = dimension;
+    }
 
     public Coord4D(NBTTagCompound tag) {
         read(tag);
@@ -25,18 +38,32 @@ public class Coord4D {
     }
 
     public NBTTagCompound write(NBTTagCompound tag) {
-        tag.setInteger("x", x);
-        tag.setInteger("y", y);
-        tag.setInteger("z", z);
-        tag.setInteger("dimension", dimension);
+        tag.setInteger(X, x);
+        tag.setInteger(Y, y);
+        tag.setInteger(Z, z);
+        tag.setInteger(DIMENSION, dimension);
         return tag;
     }
 
+    public void write(FluxConnectorDTO dto) {
+        dto.setX(x);
+        dto.setY(y);
+        dto.setZ(z);
+        dto.setDimension(dimension);
+    }
+
     public void read(NBTTagCompound tag) {
-        x = tag.getInteger("x");
-        y = tag.getInteger("y");
-        z = tag.getInteger("z");
-        dimension = tag.getInteger("dimension");
+        x = tag.getInteger(X);
+        y = tag.getInteger(Y);
+        z = tag.getInteger(Z);
+        dimension = tag.getInteger(DIMENSION);
+    }
+
+    public void read(FluxConnectorDTO dto) {
+        x = dto.getX();
+        y = dto.getY();
+        z = dto.getZ();
+        dimension = dto.getDimension();
     }
 
     public void write(ByteBuf buf) {

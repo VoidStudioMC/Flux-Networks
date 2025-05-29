@@ -1,6 +1,7 @@
 package sonar.fluxnetworks.common.data;
 
 import com.google.common.collect.Lists;
+import com.mongodb.BasicDBObject;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,7 +15,12 @@ import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.commons.io.FileUtils;
 import sonar.fluxnetworks.FluxNetworks;
-import sonar.fluxnetworks.api.network.*;
+import sonar.fluxnetworks.api.network.AccessLevel;
+import sonar.fluxnetworks.api.network.IFluxNetwork;
+import sonar.fluxnetworks.api.network.ISuperAdmin;
+import sonar.fluxnetworks.api.network.NetworkMember;
+import sonar.fluxnetworks.api.network.NetworkSettings;
+import sonar.fluxnetworks.api.network.SecurityType;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.utils.Capabilities;
 import sonar.fluxnetworks.api.utils.EnergyType;
@@ -23,6 +29,7 @@ import sonar.fluxnetworks.common.connection.FluxLiteConnector;
 import sonar.fluxnetworks.common.connection.FluxNetworkBase;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 import sonar.fluxnetworks.common.connection.FluxNetworkServer;
+import sonar.fluxnetworks.common.data.dto.FluxNetworkDataDTO;
 import sonar.fluxnetworks.common.handler.PacketHandler;
 import sonar.fluxnetworks.common.network.PacketNetworkUpdate;
 
@@ -33,6 +40,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static sonar.fluxnetworks.FluxConfig.MONGO_COLLECTION;
+import static sonar.fluxnetworks.FluxConfig.MONGO_SERVER_ID;
+import static sonar.fluxnetworks.common.data.TagConstants.INDEX_FIELD;
+import static sonar.fluxnetworks.common.data.TagConstants.X;
+import static sonar.fluxnetworks.common.data.TagConstants.Z;
 
 /**
  * Save network data to local. Only on server side
@@ -65,10 +78,10 @@ public class FluxNetworkData extends WorldSavedData {
     public static String OLD_NETWORK_COLOR = "colour";
     public static String OLD_NETWORK_ACCESS = "access";
 
-    public Map<Integer, IFluxNetwork> networks = new HashMap<>();
+    public Map<Long, IFluxNetwork> networks = new HashMap<>();
     public Map<Integer, List<ChunkPos>> loadedChunks = new HashMap<>(); // Forced Chunks
 
-    public int uniqueID = 1;
+    public long uniqueID = 1;
 
     public FluxNetworkData(String name) {
         super(name);
@@ -98,46 +111,53 @@ public class FluxNetworkData extends WorldSavedData {
     }
 
     private static void loadData() {
-        World world = DimensionManager.getWorld(0);
+        FluxNetworkDataDTO fluxNetworkDataDTO = MONGO_COLLECTION.find(new BasicDBObject(INDEX_FIELD, MONGO_SERVER_ID)).first();
+        FluxNetworkData savedData;
+        if (fluxNetworkDataDTO != null  && !fluxNetworkDataDTO.isEmpty()) {
+            savedData = fluxNetworkDataDTO.getFluxNetworkData();
+        } else {
+            World world = DimensionManager.getWorld(0);
 
-        MapStorage mapStorage = world.getMapStorage();
-        FluxNetworkData savedData = (FluxNetworkData) mapStorage.getOrLoadData(FluxNetworkData.class, NETWORK_DATA);
+            MapStorage mapStorage = world.getMapStorage();
+            savedData = (FluxNetworkData) mapStorage.getOrLoadData(FluxNetworkData.class, NETWORK_DATA);
 
-        if (savedData == null) {
-            File oldFile = new File(world.getSaveHandler().getWorldDirectory(), "data/sonar.flux.networks.configurations.dat");
-            if (oldFile.exists()) {
-                //oldFile.renameTo(new File(oldFile.getParent(), FluxNetworkData.NETWORK_DATA + ".dat"));
-                try {
-                    FileUtils.copyFile(oldFile, new File(oldFile.getParent(), FluxNetworkData.NETWORK_DATA + ".dat"));
-                } catch (IOException e) {
-                    e.printStackTrace();
+            if (savedData == null) {
+                File oldFile = new File(world.getSaveHandler().getWorldDirectory(), "data/sonar.flux.networks.configurations.dat");
+                if (oldFile.exists()) {
+                    //oldFile.renameTo(new File(oldFile.getParent(), FluxNetworkData.NETWORK_DATA + ".dat"));
+                    try {
+                        FileUtils.copyFile(oldFile, new File(oldFile.getParent(), FluxNetworkData.NETWORK_DATA + ".dat"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    FluxNetworks.logger.info("Old FluxNetworkData found");
+                    savedData = (FluxNetworkData) mapStorage.getOrLoadData(FluxNetworkData.class, NETWORK_DATA);
+                } else {
+                    savedData = new FluxNetworkData(NETWORK_DATA);
+                    mapStorage.setData(NETWORK_DATA, savedData);
+                    FluxNetworks.logger.info("No FluxNetworkData found");
                 }
-                FluxNetworks.logger.info("Old FluxNetworkData found");
-                savedData = (FluxNetworkData) mapStorage.getOrLoadData(FluxNetworkData.class, NETWORK_DATA);
-            } else {
-                savedData = new FluxNetworkData(NETWORK_DATA);
-                mapStorage.setData(NETWORK_DATA, savedData);
-                FluxNetworks.logger.info("No FluxNetworkData found");
             }
         }
+
         data = savedData;
         FluxNetworks.logger.info("FluxNetworkData has been successfully loaded");
     }
 
     public void addNetwork(IFluxNetwork network) {
         networks.putIfAbsent(network.getNetworkID(), network);
-        PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_GENERAL));
+        PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(network, NBTType.NETWORK_GENERAL));
     }
 
     public void removeNetwork(IFluxNetwork network) {
-        PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_CLEAR));
+        PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(network, NBTType.NETWORK_CLEAR));
         network.onRemoved();
         networks.remove(network.getNetworkID());
     }
 
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
-        uniqueID = nbt.getInteger(UNIQUE_ID);
+        uniqueID = nbt.getLong(UNIQUE_ID);
         if (nbt.hasKey(NETWORKS)) {
             NBTTagList list = nbt.getTagList(NETWORKS, Constants.NBT.TAG_COMPOUND);
             for (int i = 0; i < list.tagCount(); i++) {
@@ -157,7 +177,7 @@ public class FluxNetworkData extends WorldSavedData {
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-        compound.setInteger(UNIQUE_ID, uniqueID);
+        compound.setLong(UNIQUE_ID, uniqueID);
 
         NBTTagList list = new NBTTagList();
         for (IFluxNetwork network : FluxNetworkCache.instance.getAllNetworks()) {
@@ -170,7 +190,15 @@ public class FluxNetworkData extends WorldSavedData {
         NBTTagCompound tag = new NBTTagCompound();
         loadedChunks.forEach((dim, pos) -> writeChunks(dim, pos, tag));
         compound.setTag(LOADED_CHUNKS, tag);
+        save(compound);
         return compound;
+    }
+
+    private void save(NBTTagCompound nbt) {
+        FluxNetworkDataDTO networkDataDTO = FluxNetworkDataDTO.fromNBT(nbt);
+        if (networkDataDTO != null) {
+            MONGO_COLLECTION.findOneAndReplace(new BasicDBObject(INDEX_FIELD, networkDataDTO.getServerID()), networkDataDTO);
+        }
     }
 
     public static void readPlayers(IFluxNetwork network, @Nonnull NBTTagCompound nbt) {
@@ -273,7 +301,7 @@ public class FluxNetworkData extends WorldSavedData {
             List<ChunkPos> pos = loadedChunks.computeIfAbsent(Integer.valueOf(key), l -> new ArrayList<>());
             for (int i = 0; i < list.tagCount(); i++) {
                 NBTTagCompound tag = list.getCompoundTagAt(i);
-                pos.add(new ChunkPos(tag.getInteger("x"), tag.getInteger("z")));
+                pos.add(new ChunkPos(tag.getInteger(X), tag.getInteger(Z)));
             }
         }
     }
@@ -283,8 +311,8 @@ public class FluxNetworkData extends WorldSavedData {
             NBTTagList list = new NBTTagList();
             pos.forEach(p -> {
                 NBTTagCompound t = new NBTTagCompound();
-                t.setInteger("x", p.x);
-                t.setInteger("z", p.z);
+                t.setInteger(X, p.x);
+                t.setInteger(Z, p.z);
                 list.appendTag(t);
             });
             nbt.setTag(String.valueOf(dim), list);
@@ -293,7 +321,7 @@ public class FluxNetworkData extends WorldSavedData {
     }
 
     private static void readOldData(FluxNetworkBase network, NBTTagCompound nbt) {
-        network.network_id.setValue(nbt.getInteger(FluxNetworkData.OLD_NETWORK_ID));
+        network.network_id.setValue(nbt.getLong(FluxNetworkData.OLD_NETWORK_ID));
         network.network_name.setValue(nbt.getString(FluxNetworkData.OLD_NETWORK_NAME));
         NBTTagCompound color = nbt.getCompoundTag(FluxNetworkData.OLD_NETWORK_COLOR);
         network.network_color.setValue(color.getInteger("red") << 16 | color.getInteger("green") << 8 | color.getInteger("blue"));

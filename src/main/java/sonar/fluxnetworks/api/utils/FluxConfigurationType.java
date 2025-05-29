@@ -35,12 +35,12 @@ public class FluxConfigurationType {
 
     public static void copyNetwork(NBTTagCompound nbt, String key, TileFluxCore tile) {
         if (!tile.getNetwork().isInvalid() && tile.getNetworkID() != -1) {
-            nbt.setInteger(key, tile.getNetworkID());
+            nbt.setLong(key, tile.getNetworkID());
         }
     }
 
     public static void pasteNetwork(NBTTagCompound nbt, String key, TileFluxCore tile) {
-        int storedID = nbt.getInteger(key);
+        long storedID = nbt.getLong(key);
         if (storedID != -1) {
             IFluxNetwork newNetwork = FluxNetworkCache.instance.getNetwork(storedID);
             tile.getNetwork().queueConnectionRemoval(tile, false);

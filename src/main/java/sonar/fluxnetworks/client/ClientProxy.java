@@ -117,7 +117,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     @Override
-    public void receiveColorCache(Map<Integer, Tuple<Integer, String>> cache) {
+    public void receiveColorCache(Map<Long, Tuple<Integer, String>> cache) {
         FluxColorHandler.receiveCache(cache);
     }
 

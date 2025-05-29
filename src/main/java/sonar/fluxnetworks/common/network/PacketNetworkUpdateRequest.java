@@ -17,7 +17,7 @@ public class PacketNetworkUpdateRequest implements IMessageHandler<PacketNetwork
     public IMessage onMessage(UpdateRequestMessage message, MessageContext ctx) {
         List<IFluxNetwork> networks = Lists.newArrayList();
 
-        for (Integer i : message.networks) {
+        for (Long i : message.networks) {
             IFluxNetwork network = FluxNetworkCache.instance.getNetwork(i);
             if (!network.isInvalid()) {
                 networks.add(network);
@@ -31,13 +31,13 @@ public class PacketNetworkUpdateRequest implements IMessageHandler<PacketNetwork
 
     public static class UpdateRequestMessage implements IMessage {
 
-        public List<Integer> networks = Lists.newArrayList();
+        public List<Long> networks = Lists.newArrayList();
         public NBTType type;
 
         public UpdateRequestMessage() {
         }
 
-        public UpdateRequestMessage(int networkID, NBTType type) {
+        public UpdateRequestMessage(long networkID, NBTType type) {
             this.networks.add(networkID);
             this.type = type;
         }
@@ -51,7 +51,7 @@ public class PacketNetworkUpdateRequest implements IMessageHandler<PacketNetwork
         public void fromBytes(ByteBuf buf) {
             int size = buf.readInt();
             for (int i = 0; i < size; i++) {
-                networks.add(buf.readInt());
+                networks.add(buf.readLong());
             }
             type = NBTType.values()[buf.readInt()];
         }
@@ -60,7 +60,7 @@ public class PacketNetworkUpdateRequest implements IMessageHandler<PacketNetwork
         public void toBytes(ByteBuf buf) {
             buf.writeInt(networks.size());
 
-            networks.forEach(buf::writeInt);
+            networks.forEach(buf::writeLong);
             buf.writeInt(type.ordinal());
         }
     }

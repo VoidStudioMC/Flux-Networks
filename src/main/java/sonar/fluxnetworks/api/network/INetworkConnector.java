@@ -5,7 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 ///refers to anything which can be connected to a specific network, flux tiles & configurators
 public interface INetworkConnector {
 
-    int getNetworkID();
+    long getNetworkID();
 
     IFluxNetwork getNetwork();
 

@@ -29,7 +29,7 @@ public class PacketNetworkUpdate implements IMessageHandler<PacketNetworkUpdate.
 
     public static class NetworkUpdateMessage implements IMessage {
 
-        public Map<Integer, NBTTagCompound> updatedNetworks = new HashMap<>();
+        public Map<Long, NBTTagCompound> updatedNetworks = new HashMap<>();
         public NBTType type;
 
         public NetworkUpdateMessage() {
@@ -46,12 +46,21 @@ public class PacketNetworkUpdate implements IMessageHandler<PacketNetworkUpdate.
             });
         }
 
+        public NetworkUpdateMessage(IFluxNetwork toSend, NBTType type) {
+            this.type = type;
+            NBTTagCompound tag = new NBTTagCompound();
+            toSend.writeNetworkNBT(tag, type);
+            if (!tag.isEmpty()) {
+                updatedNetworks.put(toSend.getNetworkID(), tag);
+            }
+        }
+
         @Override
         public void fromBytes(ByteBuf buf) {
             type = NBTType.values()[buf.readInt()];
             int size = buf.readInt();
             for (int i = 0; i < size; i++) {
-                updatedNetworks.put(buf.readInt(), ByteBufUtils.readTag(buf));
+                updatedNetworks.put(buf.readLong(), ByteBufUtils.readTag(buf));
             }
         }
 
@@ -60,7 +69,7 @@ public class PacketNetworkUpdate implements IMessageHandler<PacketNetworkUpdate.
             buf.writeInt(type.ordinal());
             buf.writeInt(updatedNetworks.size());
             updatedNetworks.forEach((i, n) -> {
-                buf.writeInt(i);
+                buf.writeLong(i);
                 ByteBufUtils.writeTag(buf, n);
             });
         }

@@ -36,7 +36,7 @@ public class PacketSetConfiguratorNetwork implements IMessageHandler<PacketSetCo
             ItemStack stack = player.getHeldItemMainhand();
             if (stack.getItem() instanceof ItemConfigurator) {
                 NBTTagCompound configs = stack.getOrCreateSubCompound(FluxUtils.CONFIGS_TAG);
-                configs.setInteger(FluxConfigurationType.NETWORK.getNBTName(), message.id);
+                configs.setLong(FluxConfigurationType.NETWORK.getNBTName(), message.id);
             }
             return new PacketFeedback.FeedbackMessage(EnumFeedbackInfo.SUCCESS);
         }
@@ -45,26 +45,26 @@ public class PacketSetConfiguratorNetwork implements IMessageHandler<PacketSetCo
 
     public static class SetConfiguratorNetworkMessage implements IMessage {
 
-        public int id;
+        public long id;
         public String password;
 
         public SetConfiguratorNetworkMessage() {
         }
 
-        public SetConfiguratorNetworkMessage(int id, String password) {
+        public SetConfiguratorNetworkMessage(long id, String password) {
             this.id = id;
             this.password = password;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            id = buf.readInt();
+            id = buf.readLong();
             password = ByteBufUtils.readUTF8String(buf);
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
-            buf.writeInt(id);
+            buf.writeLong(id);
             ByteBufUtils.writeUTF8String(buf, password);
         }
     }

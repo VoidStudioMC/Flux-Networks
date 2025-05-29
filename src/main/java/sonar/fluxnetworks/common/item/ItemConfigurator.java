@@ -81,7 +81,7 @@ public class ItemConfigurator extends ItemCore {
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         NBTTagCompound tag = stack.getSubCompound(FluxUtils.CONFIGS_TAG);
         if (tag != null) {
-            tooltip.add(FluxTranslate.NETWORK_FULL_NAME.t() + ": " + TextFormatting.WHITE + FluxColorHandler.getOrRequestNetworkName(tag.getInteger(FluxConfigurationType.NETWORK.getNBTName())));
+            tooltip.add(FluxTranslate.NETWORK_FULL_NAME.t() + ": " + TextFormatting.WHITE + FluxColorHandler.getOrRequestNetworkName(tag.getLong(FluxConfigurationType.NETWORK.getNBTName())));
         }
         super.addInformation(stack, worldIn, tooltip, flagIn);
     }
@@ -89,17 +89,17 @@ public class ItemConfigurator extends ItemCore {
     public static class NetworkConnector implements INetworkConnector {
 
         public ItemStack stack;
-        public int networkID;
+        public long networkID;
         public IFluxNetwork network;
 
-        public NetworkConnector(ItemStack stack, int networkID, IFluxNetwork network) {
+        public NetworkConnector(ItemStack stack, long networkID, IFluxNetwork network) {
             this.stack = stack;
             this.networkID = networkID;
             this.network = network;
         }
 
         @Override
-        public int getNetworkID() {
+        public long getNetworkID() {
             return networkID;
         }
 
@@ -121,7 +121,7 @@ public class ItemConfigurator extends ItemCore {
 
     public static NetworkConnector getNetworkConnector(ItemStack stack, World world) {
         NBTTagCompound tag = stack.getSubCompound(FluxUtils.CONFIGS_TAG);
-        int networkID = tag != null ? tag.getInteger(FluxConfigurationType.NETWORK.getNBTName()) : -1;
+        long networkID = tag != null ? tag.getLong(FluxConfigurationType.NETWORK.getNBTName()) : -1;
         IFluxNetwork network = world.isRemote ? FluxNetworkCache.instance.getClientNetwork(networkID) : FluxNetworkCache.instance.getNetwork(networkID);
         return new NetworkConnector(stack, networkID, network);
     }

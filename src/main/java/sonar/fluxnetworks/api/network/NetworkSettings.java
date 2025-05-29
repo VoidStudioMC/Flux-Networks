@@ -12,7 +12,7 @@ import java.util.UUID;
 ///TODO remove common references
 public class NetworkSettings<T> {
 
-    public static final NetworkSettings<Integer> NETWORK_ID = new NetworkSettings<>(s -> s.network_id);
+    public static final NetworkSettings<Long> NETWORK_ID = new NetworkSettings<>(s -> s.network_id);
     public static final NetworkSettings<String> NETWORK_NAME = new NetworkSettings<>(s -> s.network_name);
     public static final NetworkSettings<SecurityType> NETWORK_SECURITY = new NetworkSettings<>(s -> s.network_security);
     public static final NetworkSettings<String> NETWORK_PASSWORD = new NetworkSettings<>(s -> s.network_password);

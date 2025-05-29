@@ -25,20 +25,20 @@ public class PacketConnectionUpdate implements IMessageHandler<PacketConnectionU
 
     public static class NetworkConnectionMessage implements IMessage {
 
-        public int networkID;
+        public long networkID;
         public List<NBTTagCompound> tags = new ArrayList<>();
 
         public NetworkConnectionMessage() {
         }
 
-        public NetworkConnectionMessage(int networkID, List<NBTTagCompound> tags) {
+        public NetworkConnectionMessage(long networkID, List<NBTTagCompound> tags) {
             this.networkID = networkID;
             this.tags = tags;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            networkID = buf.readInt();
+            networkID = buf.readLong();
             int size = buf.readInt();
             for (int i = 0; i < size; i++) {
                 tags.add(ByteBufUtils.readTag(buf));
@@ -47,7 +47,7 @@ public class PacketConnectionUpdate implements IMessageHandler<PacketConnectionU
 
         @Override
         public void toBytes(ByteBuf buf) {
-            buf.writeInt(networkID);
+            buf.writeLong(networkID);
             buf.writeInt(tags.size());
             tags.forEach(t -> ByteBufUtils.writeTag(buf, t));
         }
