@@ -94,7 +94,7 @@ public class PacketGeneralHandler {
                 network.setSetting(NetworkSettings.NETWORK_SECURITY, security);
                 network.setSetting(NetworkSettings.NETWORK_ENERGY, energy);
                 network.setSetting(NetworkSettings.NETWORK_PASSWORD, password);
-                PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_GENERAL));
+                FluxNetworkData.sendNetworkToRelevantPlayers(network, NBTType.NETWORK_GENERAL);
                 return new PacketFeedback.FeedbackMessage(EnumFeedbackInfo.SUCCESS_2);
             } else {
                 return new PacketFeedback.FeedbackMessage(EnumFeedbackInfo.NO_ADMIN);
@@ -201,6 +201,10 @@ public class PacketGeneralHandler {
                         if (player1 != null) {
                             NetworkMember newMember = NetworkMember.createNetworkMember(player1, AccessLevel.USER);
                             network.getSetting(NetworkSettings.NETWORK_PLAYERS).add(newMember);
+                            // If the target player is online, immediately show the network in their selection list.
+                            if (player1 instanceof EntityPlayerMP) {
+                                PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_GENERAL), (EntityPlayerMP) player1);
+                            }
                             PacketHandler.network.sendTo(new PacketFeedback.FeedbackMessage(EnumFeedbackInfo.SUCCESS), (EntityPlayerMP) player);
                             return new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_PLAYERS);
                         }
@@ -215,12 +219,26 @@ public class PacketGeneralHandler {
                                 p.setAccessPermission(AccessLevel.USER);
                             } else if (type == 3) {
                                 network.getSetting(NetworkSettings.NETWORK_PLAYERS).remove(p);
+                                // If the removed player is online, immediately remove the network from their selection list.
+                                EntityPlayer removed = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(playerChanged);
+                                if (removed instanceof EntityPlayerMP) {
+                                    PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_CLEAR), (EntityPlayerMP) removed);
+                                }
                             } else if (type == 4) {
+                                UUID oldOwner = network.getSetting(NetworkSettings.NETWORK_OWNER);
                                 /*network.getSetting(NetworkSettings.NETWORK_PLAYERS).stream()
                                         .filter(f -> f.getAccessPermission().canDelete()).findFirst().ifPresent(s -> s.setAccessPermission(AccessPermission.USER));*/
                                 network.getSetting(NetworkSettings.NETWORK_PLAYERS).removeIf(f -> f.getAccessPermission().canDelete());
                                 network.setSetting(NetworkSettings.NETWORK_OWNER, playerChanged);
                                 p.setAccessPermission(AccessLevel.OWNER);
+                                // Owner changed: refresh visible networks for members, and hide it from the old owner if they lost access.
+                                FluxNetworkData.sendNetworkToRelevantPlayers(network, NBTType.NETWORK_GENERAL);
+                                if (oldOwner != null && !oldOwner.equals(playerChanged)) {
+                                    EntityPlayer old = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(oldOwner);
+                                    if (old instanceof EntityPlayerMP && !network.getValidMember(oldOwner).map(m -> m.getAccessPermission().canAccess()).orElse(false)) {
+                                        PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_CLEAR), (EntityPlayerMP) old);
+                                    }
+                                }
                             }
                             PacketHandler.network.sendTo(new PacketFeedback.FeedbackMessage(EnumFeedbackInfo.SUCCESS), (EntityPlayerMP) player);
                             return new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_PLAYERS);
@@ -234,6 +252,7 @@ public class PacketGeneralHandler {
                                 NetworkMember newMember = NetworkMember.createNetworkMember(player1, AccessLevel.OWNER);
                                 network.getSetting(NetworkSettings.NETWORK_PLAYERS).add(newMember);
                                 network.setSetting(NetworkSettings.NETWORK_OWNER, playerChanged);
+                                FluxNetworkData.sendNetworkToRelevantPlayers(network, NBTType.NETWORK_GENERAL);
                                 PacketHandler.network.sendTo(new PacketFeedback.FeedbackMessage(EnumFeedbackInfo.SUCCESS), (EntityPlayerMP) player);
                                 return new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_PLAYERS);
                             }

@@ -88,7 +88,10 @@ public abstract class FluxNetworkBase implements IFluxNetwork {
             nbt.setString(FluxNetworkData.NETWORK_NAME, network_name.getValue());
             nbt.setUniqueId(FluxNetworkData.OWNER_UUID, network_owner.getValue());
             nbt.setInteger(FluxNetworkData.SECURITY_TYPE, network_security.getValue().ordinal());
-            nbt.setString(FluxNetworkData.NETWORK_PASSWORD, network_password.getValue());
+            // SECURITY: never sync passwords to clients; only persist them in server saves.
+            if (type == NBTType.ALL_SAVE) {
+                nbt.setString(FluxNetworkData.NETWORK_PASSWORD, network_password.getValue());
+            }
             nbt.setInteger(FluxNetworkData.NETWORK_COLOR, network_color.getValue());
             nbt.setInteger(FluxNetworkData.ENERGY_TYPE, network_energy.getValue().ordinal());
             nbt.setInteger(FluxNetworkData.WIRELESS_MODE, network_wireless.getValue());

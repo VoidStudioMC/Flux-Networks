@@ -94,7 +94,7 @@ dependencies {
 
     implementation fg.deobf("mezz.jei:jei_${minecraft_version}:${jei_version}:api")
 
-    implementation fg.deobf("mcjty.theoneprobe:TheOneProbe-1.12:${top_version}")
+    implementation fg.deobf("curse.maven:baubles-245211:2667280")
 
     implementation fg.deobf("li.cil.oc:OpenComputers:MC${minecraft_version}-1.7.5.213:api")
 

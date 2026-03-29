@@ -5,9 +5,11 @@ import net.minecraft.nbt.NBTTagCompound;
 import sonar.fluxnetworks.FluxConfig;
 import sonar.fluxnetworks.api.network.*;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
+import sonar.fluxnetworks.api.utils.Capabilities;
 import sonar.fluxnetworks.api.utils.Coord4D;
 import sonar.fluxnetworks.api.utils.EnergyType;
 import sonar.fluxnetworks.api.utils.NBTType;
+import sonar.fluxnetworks.common.capabilities.DefaultSuperAdmin;
 import sonar.fluxnetworks.common.data.FluxNetworkData;
 
 import java.util.*;
@@ -25,6 +27,7 @@ public class FluxNetworkCache {
      **/
     public Map<Integer, IFluxNetwork> networks = new HashMap<>();
     public boolean superAdminClient = false;
+    public Set<Integer> memberNetworksClient = new HashSet<>();
 
     public void clearNetworks() {
         FluxNetworkData.clear();
@@ -33,6 +36,21 @@ public class FluxNetworkCache {
     public void clearClientCache() {
         networks.clear();
         superAdminClient = false;
+        memberNetworksClient.clear();
+    }
+
+    /**
+     * Client Only
+     **/
+    public void updateClientMemberNetworks(Set<Integer> memberNetworkIds) {
+        this.memberNetworksClient = memberNetworkIds;
+    }
+
+    /**
+     * Client Only
+     **/
+    public boolean isClientPlayerMemberOf(int networkId) {
+        return memberNetworksClient.contains(networkId);
     }
 
     public boolean hasSpaceLeft(EntityPlayer player) {
@@ -52,7 +70,33 @@ public class FluxNetworkCache {
         network.getSetting(NetworkSettings.NETWORK_PLAYERS).add(owner);
 
         FluxNetworkData.get().addNetwork(network);
+        // Sync to everyone who should see this network (owner, members, OP/super-admin viewers).
+        FluxNetworkData.sendNetworkToRelevantPlayers(network, NBTType.NETWORK_GENERAL);
         return network;
+    }
+
+    /**
+     * Server Only: which networks should be visible in the client's selection list.
+     * By default: only networks where the player is a member (owner included).
+     * Players who may activate Super Admin (OP level per config) or toggled super-admin see all networks.
+     */
+    public List<IFluxNetwork> getVisibleNetworksForPlayer(EntityPlayer player) {
+        if (player == null) {
+            return Collections.emptyList();
+        }
+        if (DefaultSuperAdmin.canActivateSuperAdmin(player)) {
+            return new ArrayList<>(getAllNetworks());
+        }
+        if (FluxConfig.enableSuperAdmin) {
+            ISuperAdmin sa = player.getCapability(Capabilities.SUPER_ADMIN, null);
+            if (sa != null && sa.getPermission()) {
+                return new ArrayList<>(getAllNetworks());
+            }
+        }
+        UUID uuid = player.getUniqueID();
+        return getAllNetworks().stream()
+                .filter(n -> n.getValidMember(uuid).map(m -> m.getAccessPermission().canAccess()).orElse(false))
+                .collect(Collectors.toList());
     }
 
     private int getUniqueID() {

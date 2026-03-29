@@ -13,6 +13,7 @@ import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.apache.commons.io.FileUtils;
+import sonar.fluxnetworks.FluxConfig;
 import sonar.fluxnetworks.FluxNetworks;
 import sonar.fluxnetworks.api.network.*;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
@@ -21,6 +22,7 @@ import sonar.fluxnetworks.api.utils.EnergyType;
 import sonar.fluxnetworks.api.utils.NBTType;
 import sonar.fluxnetworks.common.connection.FluxLiteConnector;
 import sonar.fluxnetworks.common.connection.FluxNetworkBase;
+import sonar.fluxnetworks.common.capabilities.DefaultSuperAdmin;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 import sonar.fluxnetworks.common.connection.FluxNetworkServer;
 import sonar.fluxnetworks.common.handler.PacketHandler;
@@ -33,6 +35,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Save network data to local. Only on server side
@@ -126,13 +130,47 @@ public class FluxNetworkData extends WorldSavedData {
 
     public void addNetwork(IFluxNetwork network) {
         networks.putIfAbsent(network.getNetworkID(), network);
-        PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_GENERAL));
     }
 
     public void removeNetwork(IFluxNetwork network) {
-        PacketHandler.network.sendToAll(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), NBTType.NETWORK_CLEAR));
+        // Only notify players who can currently see this network (members + super-admins)
+        sendNetworkToRelevantPlayers(network, NBTType.NETWORK_CLEAR);
         network.onRemoved();
         networks.remove(network.getNetworkID());
+    }
+
+    public static void sendNetworkToRelevantPlayers(IFluxNetwork network, NBTType type) {
+        if (network == null || network.isInvalid()) {
+            return;
+        }
+        List<EntityPlayerMP> players = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayers();
+        if (players.isEmpty()) {
+            return;
+        }
+        for (EntityPlayerMP p : players) {
+            if (p == null) {
+                continue;
+            }
+            if (isSuperAdmin(p) || DefaultSuperAdmin.canActivateSuperAdmin(p) || isMemberWithAccess(network, p.getUniqueID())) {
+                PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(Lists.newArrayList(network), type), p);
+            }
+        }
+    }
+
+    private static boolean isSuperAdmin(EntityPlayer player) {
+        if (!FluxConfig.enableSuperAdmin || player == null) {
+            return false;
+        }
+        ISuperAdmin sa = player.getCapability(Capabilities.SUPER_ADMIN, null);
+        return sa != null && sa.getPermission();
+    }
+
+    private static boolean isMemberWithAccess(IFluxNetwork network, UUID uuid) {
+        if (uuid == null) {
+            return false;
+        }
+        Optional<NetworkMember> member = network.getValidMember(uuid);
+        return member.isPresent() && member.get().getAccessPermission().canAccess();
     }
 
     @Override

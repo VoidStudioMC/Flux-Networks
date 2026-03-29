@@ -33,6 +33,8 @@ public class PacketHandler {
         network.registerMessage(PacketActivateSuperAdmin.class, PacketActivateSuperAdmin.ActivateSuperAdminMessage.class, 16, Side.SERVER);
         network.registerMessage(PacketConfiguratorSettings.class, PacketConfiguratorSettings.ConfiguratorSettingsMessage.class, 17, Side.SERVER);
         network.registerMessage(PacketSetConfiguratorNetwork.class, PacketSetConfiguratorNetwork.SetConfiguratorNetworkMessage.class, 18, Side.SERVER);
+        network.registerMessage(PacketNetworkMembershipRequest.class, PacketNetworkMembershipRequest.MembershipRequestMessage.class, 19, Side.SERVER);
+        network.registerMessage(PacketNetworkMembershipUpdate.class, PacketNetworkMembershipUpdate.MembershipUpdateMessage.class, 20, Side.CLIENT);
     }
 
     public static EntityPlayer getPlayer(MessageContext ctx) {

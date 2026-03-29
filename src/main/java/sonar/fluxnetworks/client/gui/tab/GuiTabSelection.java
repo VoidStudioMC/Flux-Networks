@@ -15,16 +15,22 @@ import sonar.fluxnetworks.client.gui.basic.GuiTabPages;
 import sonar.fluxnetworks.client.gui.popups.GuiPopNetworkPassword;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 import sonar.fluxnetworks.common.core.FluxUtils;
+import sonar.fluxnetworks.common.handler.PacketHandler;
 import sonar.fluxnetworks.common.item.ItemConfigurator;
+import sonar.fluxnetworks.common.network.PacketNetworkMembershipRequest;
 
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.List;
 
 public class GuiTabSelection extends GuiTabPages<IFluxNetwork> {
 
     public IFluxNetwork selectedNetwork;
 
     protected int timer2;
+    private boolean membershipRequested;
+    private int membershipRequestSize = -1;
+    private int membershipRefreshTimer;
 
     public GuiTabSelection(EntityPlayer player, INetworkConnector connector) {
         super(player, connector);
@@ -132,7 +138,17 @@ public class GuiTabSelection extends GuiTabPages<IFluxNetwork> {
     public void updateScreen() {
         super.updateScreen();
         if (timer2 == 0) {
-            refreshPages(FluxNetworkCache.instance.getAllClientNetworks());
+            // Refresh list + (re)request membership info when the amount of networks changes.
+            List<IFluxNetwork> all = FluxNetworkCache.instance.getAllClientNetworks();
+            membershipRefreshTimer++;
+            boolean timeToRefresh = membershipRefreshTimer >= 10; // every ~5s (timer2 == 0 happens every 10 ticks)
+            if (!membershipRequested || membershipRequestSize != all.size() || timeToRefresh) {
+                PacketHandler.network.sendToServer(new PacketNetworkMembershipRequest.MembershipRequestMessage(all));
+                membershipRequested = true;
+                membershipRequestSize = all.size();
+                membershipRefreshTimer = 0;
+            }
+            refreshPages(all);
         }
         if (FluxNetworks.proxy.getFeedback(true) == EnumFeedbackInfo.SUCCESS) {
             closePopUp();
@@ -157,7 +173,11 @@ public class GuiTabSelection extends GuiTabPages<IFluxNetwork> {
     protected void sortGrids(SortType sortType) {
         switch (sortType) {
             case MY_FIRST:
-                elements.sort((network1, network2) -> Boolean.compare(network2.playerIsOwner(player), network1.playerIsOwner(player)));
+                elements.sort(Comparator
+                        .comparing((IFluxNetwork n) -> FluxNetworkCache.instance.isClientPlayerMemberOf(n.getNetworkID()))
+                        .reversed()
+                        .thenComparing(IFluxNetwork::getNetworkName, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(IFluxNetwork::getNetworkID));
                 refreshCurrentPageInternal();
                 break;
             case ID:

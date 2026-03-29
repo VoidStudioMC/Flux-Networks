@@ -192,7 +192,7 @@ public class CommonProxy {
     public void onPlayerJoined(PlayerEvent.PlayerLoggedInEvent event) {
         EntityPlayer player = event.player;
         if (!player.world.isRemote) {
-            PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(new ArrayList<>(FluxNetworkCache.instance.getAllNetworks()), NBTType.NETWORK_GENERAL), (EntityPlayerMP) player);
+            PacketHandler.network.sendTo(new PacketNetworkUpdate.NetworkUpdateMessage(FluxNetworkCache.instance.getVisibleNetworksForPlayer(player), NBTType.NETWORK_GENERAL), (EntityPlayerMP) player);
             PacketHandler.network.sendTo(new PacketSuperAdmin.SuperAdminMessage(DefaultSuperAdmin.isPlayerSuperAdmin(player)), (EntityPlayerMP) player);
         }
     }
