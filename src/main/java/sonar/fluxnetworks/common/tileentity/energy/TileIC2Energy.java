@@ -8,6 +8,7 @@ import ic2.api.energy.tile.IEnergySink;
 import ic2.api.energy.tile.IEnergySource;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Optional;
 
 @Optional.InterfaceList({
@@ -54,9 +55,8 @@ public abstract class TileIC2Energy extends TileRedstoneFlux implements IEnergyS
     @Override
     public void update() {
         super.update();
-        if (!IC2Connected) {
-            MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
-            IC2Connected = true;
+        if (Loader.isModLoaded("ic2")) {
+            addToIC2Enet();
         }
     }
 
@@ -110,4 +110,11 @@ public abstract class TileIC2Energy extends TileRedstoneFlux implements IEnergyS
         return 5;
     }
 
+    @Optional.Method(modid = "ic2")
+    public void addToIC2Enet() {
+        if (!IC2Connected) {
+            MinecraftForge.EVENT_BUS.post(new EnergyTileLoadEvent(this));
+            IC2Connected = true;
+        }
+    }
 }
