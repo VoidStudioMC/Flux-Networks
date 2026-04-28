@@ -14,11 +14,15 @@ import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import sonar.fluxnetworks.FluxConfig;
 import sonar.fluxnetworks.FluxNetworks;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
+import sonar.fluxnetworks.api.network.ISuperAdmin;
 import sonar.fluxnetworks.api.network.INetworkConnector;
 import sonar.fluxnetworks.api.translate.FluxTranslate;
+import sonar.fluxnetworks.api.utils.Capabilities;
 import sonar.fluxnetworks.api.utils.FluxConfigurationType;
+import sonar.fluxnetworks.common.capabilities.DefaultSuperAdmin;
 import sonar.fluxnetworks.client.FluxColorHandler;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 import sonar.fluxnetworks.common.core.FluxUtils;
@@ -59,7 +63,7 @@ public class ItemConfigurator extends ItemCore {
             } else {
                 NBTTagCompound configs = stack.getOrCreateSubCompound(FluxUtils.CONFIGS_TAG);
                 if (!configs.isEmpty()) {
-                    fluxCore.pasteConfiguration(configs);
+                    fluxCore.pasteConfiguration(validateConfigForPlayer(configs, player));
                     player.sendMessage(new TextComponentString("Pasted Configuration"));
                 }
             }
@@ -124,5 +128,45 @@ public class ItemConfigurator extends ItemCore {
         int networkID = tag != null ? tag.getInteger(FluxConfigurationType.NETWORK.getNBTName()) : -1;
         IFluxNetwork network = world.isRemote ? FluxNetworkCache.instance.getClientNetwork(networkID) : FluxNetworkCache.instance.getNetwork(networkID);
         return new NetworkConnector(stack, networkID, network);
+    }
+
+    private static NBTTagCompound validateConfigForPlayer(NBTTagCompound source, EntityPlayer player) {
+        NBTTagCompound applyTag = source.copy();
+        String networkKey = FluxConfigurationType.NETWORK.getNBTName();
+        if (!applyTag.hasKey(networkKey)) {
+            return applyTag;
+        }
+        int targetNetworkId = applyTag.getInteger(networkKey);
+        if (targetNetworkId == -1) {
+            return applyTag;
+        }
+        IFluxNetwork targetNetwork = FluxNetworkCache.instance.getNetwork(targetNetworkId);
+        if (isPlayerAllowedForNetwork(player, targetNetwork)) {
+            return applyTag;
+        }
+        applyTag.removeTag(networkKey);
+        TextComponentTranslation text = new TextComponentTranslation(FluxTranslate.ACCESS_DENIED_KEY);
+        text.getStyle().setBold(true);
+        text.getStyle().setColor(TextFormatting.DARK_RED);
+        player.sendStatusMessage(text, true);
+        return applyTag;
+    }
+
+    private static boolean isPlayerAllowedForNetwork(EntityPlayer player, IFluxNetwork network) {
+        if (network == null || network.isInvalid()) {
+            return false;
+        }
+        if (DefaultSuperAdmin.canActivateSuperAdmin(player)) {
+            return true;
+        }
+        if (FluxConfig.enableSuperAdmin) {
+            ISuperAdmin superAdmin = player.getCapability(Capabilities.SUPER_ADMIN, null);
+            if (superAdmin != null && superAdmin.getPermission()) {
+                return true;
+            }
+        }
+        return network.getValidMember(player.getUniqueID())
+                .map(member -> member.getAccessPermission().canAccess())
+                .orElse(false);
     }
 }
