@@ -19,6 +19,8 @@ import sonar.fluxnetworks.FluxNetworks;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.api.network.ISuperAdmin;
 import sonar.fluxnetworks.api.network.INetworkConnector;
+import sonar.fluxnetworks.api.tiles.IFluxConfigurable;
+import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.translate.FluxTranslate;
 import sonar.fluxnetworks.api.utils.Capabilities;
 import sonar.fluxnetworks.api.utils.FluxConfigurationType;
@@ -47,23 +49,25 @@ public class ItemConfigurator extends ItemCore {
             return EnumActionResult.SUCCESS;
         }
         TileEntity tile = worldIn.getTileEntity(pos);
-        if (tile instanceof TileFluxCore) {
-            TileFluxCore fluxCore = (TileFluxCore) tile;
-            if (!fluxCore.canAccess(player)) {
+        if (tile instanceof IFluxConnector && tile instanceof IFluxConfigurable) {
+            IFluxConnector fluxConnector = (TileFluxCore) tile;
+            if (!fluxConnector.canAccess(player)) {
                 TextComponentTranslation textComponents = new TextComponentTranslation(FluxTranslate.ACCESS_DENIED_KEY);
                 textComponents.getStyle().setBold(true);
                 textComponents.getStyle().setColor(TextFormatting.DARK_RED);
                 player.sendStatusMessage(textComponents, true);
                 return EnumActionResult.FAIL;
             }
+
+            IFluxConfigurable configurable = (IFluxConfigurable) tile;
             ItemStack stack = player.getHeldItem(hand);
             if (player.isSneaking()) {
-                stack.setTagInfo(FluxUtils.CONFIGS_TAG, fluxCore.copyConfiguration(new NBTTagCompound()));
+                stack.setTagInfo(FluxUtils.CONFIGS_TAG, configurable.copyConfiguration(new NBTTagCompound()));
                 player.sendMessage(new TextComponentString("Copied Configuration"));
             } else {
                 NBTTagCompound configs = stack.getOrCreateSubCompound(FluxUtils.CONFIGS_TAG);
                 if (!configs.isEmpty()) {
-                    fluxCore.pasteConfiguration(validateConfigForPlayer(configs, player));
+                    configurable.pasteConfiguration(validateConfigForPlayer(configs, player));
                     player.sendMessage(new TextComponentString("Pasted Configuration"));
                 }
             }

@@ -429,6 +429,26 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     }
 
     @Override
+    public void setDisableLimit(boolean disableLimit) {
+        this.disableLimit = disableLimit;
+    }
+
+    @Override
+    public void setRawLimit(long limit) {
+        this.limit = limit;
+    }
+
+    @Override
+    public void setRawPriority(int priority) {
+        this.priority = priority;
+    }
+
+    @Override
+    public void setSurgeMode(boolean surgeMode) {
+        this.surgeMode = surgeMode;
+    }
+
+    @Override
     public String[] getOCMethods() {
         return new String[]{"getNetworkInfo", "getCountInfo", "getEnergyInfo", "getFluxInfo"};
     }
