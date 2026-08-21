@@ -28,7 +28,6 @@ import sonar.fluxnetworks.common.capabilities.DefaultSuperAdmin;
 import sonar.fluxnetworks.client.FluxColorHandler;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 import sonar.fluxnetworks.common.core.FluxUtils;
-import sonar.fluxnetworks.common.tileentity.TileFluxCore;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -50,7 +49,7 @@ public class ItemConfigurator extends ItemCore {
         }
         TileEntity tile = worldIn.getTileEntity(pos);
         if (tile instanceof IFluxConnector && tile instanceof IFluxConfigurable) {
-            IFluxConnector fluxConnector = (TileFluxCore) tile;
+            IFluxConnector fluxConnector = (IFluxConnector) tile;
             if (!fluxConnector.canAccess(player)) {
                 TextComponentTranslation textComponents = new TextComponentTranslation(FluxTranslate.ACCESS_DENIED_KEY);
                 textComponents.getStyle().setBold(true);
