@@ -3,7 +3,7 @@ package sonar.fluxnetworks.common.network;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import sonar.fluxnetworks.common.tileentity.TileFluxCore;
+import sonar.fluxnetworks.api.tiles.IFluxConnector;
 
 public enum PacketTileType {
     SET_NETWORK(PacketTileHandler::handleSetNetworkPacket),
@@ -16,6 +16,6 @@ public enum PacketTileType {
     }
 
     public interface IPacketTileHandler {
-        IMessage handlePacket(TileFluxCore tile, EntityPlayer player, NBTTagCompound nbtTag);
+        IMessage handlePacket(IFluxConnector tile, EntityPlayer player, NBTTagCompound nbtTag);
     }
 }

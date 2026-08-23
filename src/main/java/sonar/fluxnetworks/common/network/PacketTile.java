@@ -13,8 +13,8 @@ import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.common.handler.PacketHandler;
-import sonar.fluxnetworks.common.tileentity.TileFluxCore;
 
 public class PacketTile implements IMessageHandler<PacketTile.TileMessage, IMessage> {
 
@@ -28,8 +28,8 @@ public class PacketTile implements IMessageHandler<PacketTile.TileMessage, IMess
                 world = server.getWorld(message.dimension);
             }
             TileEntity tile = world.getTileEntity(message.pos);
-            if (tile instanceof TileFluxCore) {
-                TileFluxCore flux = (TileFluxCore) tile;
+            if (tile instanceof IFluxConnector) {
+                IFluxConnector flux = (IFluxConnector) tile;
                 PacketHandler.handlePacket(() -> {
                     IMessage returned = message.handler.handler.handlePacket(flux, player, message.tag);
                     if (returned != null && player instanceof EntityPlayerMP) {

@@ -181,7 +181,7 @@ public abstract class GuiFluxCore extends GuiPopUpHost {
 
     public void setConnectedNetwork(int networkID, String password) {
         if (connector instanceof IFluxConnector) {
-            PacketHandler.network.sendToServer(new PacketTile.TileMessage(PacketTileType.SET_NETWORK, PacketTileHandler.getSetNetworkPacket(networkID, password), ((IFluxConnector) connector).getCoords().getPos(), ((IFluxConnector) connector).getCoords().getDimension()));
+            PacketHandler.network.sendToServer(new PacketTile.TileMessage(PacketTileType.SET_NETWORK, PacketTileHandler.getSetNetworkPacket(networkID, password), ((IFluxConnector) connector).getFluxPos(), ((IFluxConnector) connector).getCoords().getDimension()));
         }
         if (connector instanceof ItemAdminConfigurator.AdminConnector) {
             FluxNetworks.proxy.admin_viewing_network_id = networkID;

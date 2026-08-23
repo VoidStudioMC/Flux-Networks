@@ -3,6 +3,7 @@ package sonar.fluxnetworks.common.connection;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import sonar.fluxnetworks.api.network.ConnectionType;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
@@ -242,5 +243,45 @@ public class FluxLiteConnector implements IFluxConnector {
     @Override
     public void setChunkLoaded(boolean chunkLoaded) {
         isChunkLoaded = chunkLoaded;
+    }
+
+    @Override
+    public BlockPos getFluxPos() {
+        return coord4D.getPos();
+    }
+
+    @Override
+    public void setRawPriority(int priority) {
+        this.priority = priority;
+    }
+
+    @Override
+    public void setSurgeMode(boolean surgeMode) {
+        this.surgeMode = surgeMode;
+    }
+
+    @Override
+    public void setRawLimit(long limit) {
+        this.limit = limit;
+    }
+
+    @Override
+    public void setDisableLimit(boolean disableLimit) {
+        this.disableLimit = disableLimit;
+    }
+
+    @Override
+    public void setCustomName(String customName) {
+        this.customName = customName;
+    }
+
+    @Override
+    public void setForcedLoading(boolean chunkLoading) {
+        this.chunkLoading = chunkLoading;
+    }
+
+    @Override
+    public void setConnectionOwner(UUID owner) {
+        this.playerUUID = owner;
     }
 }

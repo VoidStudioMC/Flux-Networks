@@ -44,6 +44,6 @@ public class FluxPointHandler extends BasicPointHandler<TileFluxPoint> {
 
     @Override
     public void updateTransfers(@Nonnull EnumFacing... faces) {
-        FluxPlugHandler.updateSidedTransfers(device.getFluxWorld(), device.getPos(), transfers, faces);
+        FluxPlugHandler.updateSidedTransfers(device.getFluxWorld(), device.getFluxPos(), transfers, faces);
     }
 }

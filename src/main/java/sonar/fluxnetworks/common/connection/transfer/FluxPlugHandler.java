@@ -78,7 +78,7 @@ public class FluxPlugHandler extends BasicTransferHandler<TileFluxPlug> {
 
     @Override
     public void updateTransfers(@Nonnull EnumFacing... faces) {
-        updateSidedTransfers(device.getFluxWorld(), device.getPos(), transfers, faces);
+        updateSidedTransfers(device.getFluxWorld(), device.getFluxPos(), transfers, faces);
     }
 
     static void updateSidedTransfers(World world, BlockPos pos, Map<EnumFacing, ConnectionTransfer> transfers, @Nonnull EnumFacing[] faces) {

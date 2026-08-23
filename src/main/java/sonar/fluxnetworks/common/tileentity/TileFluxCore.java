@@ -1,6 +1,5 @@
 package sonar.fluxnetworks.common.tileentity;
 
-import io.netty.buffer.ByteBuf;
 import li.cil.oc.api.machine.Arguments;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -10,9 +9,9 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import sonar.fluxnetworks.FluxConfig;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
 import sonar.fluxnetworks.api.network.NetworkFolder;
@@ -23,7 +22,6 @@ import sonar.fluxnetworks.api.tiles.ITileByteBuf;
 import sonar.fluxnetworks.api.utils.Coord4D;
 import sonar.fluxnetworks.api.utils.NBTType;
 import sonar.fluxnetworks.common.connection.FluxNetworkInvalid;
-import sonar.fluxnetworks.common.connection.FluxNetworkServer;
 import sonar.fluxnetworks.common.connection.NetworkStatistics;
 import sonar.fluxnetworks.common.core.FluxUtils;
 import sonar.fluxnetworks.common.data.FluxChunkManager;
@@ -31,6 +29,7 @@ import sonar.fluxnetworks.common.data.FluxNetworkData;
 import sonar.fluxnetworks.common.integration.oc.IOCPeripheral;
 import sonar.fluxnetworks.common.item.ItemFluxConnector;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,22 +40,22 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
 
     public HashSet<EntityPlayer> playerUsing = new HashSet<>();
 
-    public String customName = "";
-    public int networkID = -1;
-    public UUID playerUUID = FluxUtils.UUID_DEFAULT;
+    protected String customName = "";
+    protected int networkID = -1;
+    protected UUID playerUUID = FluxUtils.UUID_DEFAULT;
     public int color = -1;
     public int folderID = -1;
 
-    public int priority = 0;
-    public long limit = FluxConfig.defaultLimit;
+    protected int priority = 0;
+    protected long limit = FluxConfig.defaultLimit;
 
-    public boolean surgeMode = false;
-    public boolean disableLimit = false;
+    protected boolean surgeMode = false;
+    protected boolean disableLimit = false;
 
     public boolean connected = false;
     public byte[] connections = new byte[]{0, 0, 0, 0, 0, 0};
 
-    public boolean chunkLoading = false;
+    protected boolean chunkLoading = false;
 
     protected IFluxNetwork network = FluxNetworkInvalid.instance;
 
@@ -88,7 +87,7 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     @Override
     public void update() {
         if (!world.isRemote) {
-            if (playerUsing.size() > 0) {
+            if (!playerUsing.isEmpty()) {
                 sendPackets();
             }
             if (!load) {
@@ -161,6 +160,11 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     public void sendPackets() {
         IBlockState state = world.getBlockState(pos);
         world.notifyBlockUpdate(pos, state, state, 3);
+    }
+
+    @Override
+    public void notifyFluxUpdate() {
+        sendPackets();
     }
 
     @Override
@@ -246,68 +250,6 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
             return network.getMemberPermission(player).canAccess();
         }
         return true;
-    }
-
-    @Override
-    public void writePacket(ByteBuf buf, int id) {
-        switch (id) {
-            case 1:
-                ByteBufUtils.writeUTF8String(buf, customName);
-                break;
-            case 2:
-                buf.writeInt(priority);
-                break;
-            case 3:
-                buf.writeLong(limit);
-                break;
-            case 4:
-                buf.writeBoolean(surgeMode);
-                break;
-            case 5:
-                buf.writeBoolean(disableLimit);
-                break;
-        }
-    }
-
-    @Override
-    public void readPacket(ByteBuf buf, int id) {
-        switch (id) {
-            case 1:
-                customName = ByteBufUtils.readUTF8String(buf);
-                markLiteSettingChanged();
-                break;
-            case 2:
-                priority = buf.readInt();
-                sortNetworkConnections();
-                break;
-            case 3:
-                limit = buf.readLong();
-                markLiteSettingChanged();
-                break;
-            case 4:
-                surgeMode = buf.readBoolean();
-                sortNetworkConnections();
-                break;
-            case 5:
-                disableLimit = buf.readBoolean();
-                markLiteSettingChanged();
-                break;
-        }
-    }
-
-    protected void sortNetworkConnections() {
-        if (network instanceof FluxNetworkServer) {
-            FluxNetworkServer fluxNetworkServer = (FluxNetworkServer) network;
-            fluxNetworkServer.sortConnections = true;
-            markLiteSettingChanged();
-        }
-    }
-
-    protected void markLiteSettingChanged() {
-        if (network instanceof FluxNetworkServer) {
-            FluxNetworkServer fluxNetworkServer = (FluxNetworkServer) network;
-            fluxNetworkServer.markLiteSettingChanged(this);
-        }
     }
 
     @Override
@@ -429,6 +371,11 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     }
 
     @Override
+    public @Nonnull BlockPos getFluxPos() {
+        return super.getPos();
+    }
+
+    @Override
     public void setDisableLimit(boolean disableLimit) {
         this.disableLimit = disableLimit;
     }
@@ -446,6 +393,21 @@ public abstract class TileFluxCore extends TileEntity implements IFluxConnector,
     @Override
     public void setSurgeMode(boolean surgeMode) {
         this.surgeMode = surgeMode;
+    }
+
+    @Override
+    public void setCustomName(String customName) {
+        this.customName = customName;
+    }
+
+    @Override
+    public void setForcedLoading(boolean chunkLoading) {
+        this.chunkLoading = chunkLoading;
+    }
+
+    @Override
+    public void setConnectionOwner(UUID owner) {
+        this.playerUUID = owner;
     }
 
     @Override

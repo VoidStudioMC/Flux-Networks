@@ -13,13 +13,13 @@ import sonar.fluxnetworks.FluxConfig;
 import sonar.fluxnetworks.api.gui.EnumFeedbackInfo;
 import sonar.fluxnetworks.api.network.FluxLogicType;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
+import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.utils.Coord4D;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 import sonar.fluxnetworks.common.core.FluxUtils;
 import sonar.fluxnetworks.common.data.FluxChunkManager;
 import sonar.fluxnetworks.common.handler.PacketHandler;
 import sonar.fluxnetworks.common.item.ItemFluxConnector;
-import sonar.fluxnetworks.common.tileentity.TileFluxCore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
                     boolean unlimited = message.tag.getBoolean(ItemFluxConnector.DISABLE_LIMIT);
                     boolean load = message.tag.getBoolean("chunkLoad");
                     //noinspection unchecked
-                    List<TileFluxCore> onlineConnectors = network.getConnections(FluxLogicType.ANY);
+                    List<IFluxConnector> onlineConnectors = network.getConnections(FluxLogicType.ANY);
                     AtomicBoolean reject = new AtomicBoolean(false);
                     PacketHandler.handlePacket(() -> {
                         message.coord4DS.forEach(c -> onlineConnectors.stream().filter(f -> f.getCoords().equals(c)).findFirst().ifPresent(f -> {
@@ -57,19 +57,19 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
                                 f.disconnect(network);
                             } else {
                                 if (editName) {
-                                    f.customName = name;
+                                    f.setCustomName(name);
                                 }
                                 if (editPriority) {
-                                    f.priority = priority;
+                                    f.setRawPriority(priority);
                                 }
                                 if (editLimit) {
-                                    f.limit = Math.min(limit, f.getMaxTransferLimit());
+                                    f.setRawLimit(Math.min(limit, f.getMaxTransferLimit()));
                                 }
                                 if (editSurge) {
-                                    f.surgeMode = surge;
+                                    f.setSurgeMode(surge);
                                 }
                                 if (editUnlimited) {
-                                    f.disableLimit = unlimited;
+                                    f.setDisableLimit(unlimited);
                                 }
                                 if (editChunkLoad) {
                                     if (FluxConfig.enableChunkLoading) {
@@ -78,21 +78,21 @@ public class PacketBatchEditing implements IMessageHandler<PacketBatchEditing.Ba
                                                 reject.set(true);
                                                 return;
                                             }
-                                            if (!f.chunkLoading) {
-                                                f.chunkLoading = FluxChunkManager.forceChunk(f.getWorld(), new ChunkPos(f.getPos()));
-                                                if (!f.chunkLoading) {
+                                            if (!f.isForcedLoading()) {
+                                                f.setForcedLoading(FluxChunkManager.forceChunk(f.getFluxWorld(), new ChunkPos(f.getFluxPos())));
+                                                if (!f.isForcedLoading()) {
                                                     reject.set(true);
                                                 }
                                             }
                                         } else {
-                                            FluxChunkManager.releaseChunk(f.getWorld(), new ChunkPos(f.getPos()));
-                                            f.chunkLoading = false;
+                                            FluxChunkManager.releaseChunk(f.getFluxWorld(), new ChunkPos(f.getFluxPos()));
+                                            f.setForcedLoading(false);
                                         }
                                     } else {
-                                        f.chunkLoading = false;
+                                        f.setForcedLoading(false);
                                     }
                                 }
-                                f.sendPackets();
+                                f.notifyFluxUpdate();
                             }
                         }));
                         if (reject.get()) {

@@ -89,7 +89,7 @@ public abstract class BlockFluxCore extends BlockCore {
             if (tileEntity instanceof TileFluxCore) {
                 TileFluxCore fluxCore = (TileFluxCore) tileEntity;
                 if (placer instanceof EntityPlayer) {
-                    fluxCore.playerUUID = EntityPlayer.getUUID(((EntityPlayer) placer).getGameProfile());
+                    fluxCore.setConnectionOwner(EntityPlayer.getUUID(((EntityPlayer) placer).getGameProfile()));
                 }
             }
         }

@@ -13,7 +13,6 @@ import net.minecraft.world.World;
 import sonar.fluxnetworks.api.network.ConnectionType;
 import sonar.fluxnetworks.api.network.FluxLogicType;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
-import sonar.fluxnetworks.api.tiles.IFluxConfigurable;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.api.translate.FluxTranslate;
 import sonar.fluxnetworks.api.utils.EnergyType;
@@ -243,14 +242,14 @@ public class FluxUtils {
         return true;
     }
 
-    public static <T extends IFluxConnector & IFluxConfigurable> NBTTagCompound copyConfiguration(T flux, NBTTagCompound config) {
+    public static NBTTagCompound copyConfiguration(IFluxConnector flux, NBTTagCompound config) {
         for (FluxConfigurationType type : FluxConfigurationType.VALUES) {
             type.copy.copyFromTile(config, type.getNBTName(), flux);
         }
         return config;
     }
 
-    public static <T extends IFluxConnector & IFluxConfigurable> void pasteConfiguration(T flux, NBTTagCompound config) {
+    public static void pasteConfiguration(IFluxConnector flux, NBTTagCompound config) {
         for (FluxConfigurationType type : FluxConfigurationType.VALUES) {
             if (config.hasKey(type.getNBTName())) {
                 type.paste.pasteToTile(config, type.getNBTName(), flux);

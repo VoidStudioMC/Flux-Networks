@@ -2,7 +2,6 @@ package sonar.fluxnetworks.api.utils;
 
 import net.minecraft.nbt.NBTTagCompound;
 import sonar.fluxnetworks.api.network.IFluxNetwork;
-import sonar.fluxnetworks.api.tiles.IFluxConfigurable;
 import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.common.connection.FluxNetworkCache;
 
@@ -55,7 +54,7 @@ public class FluxConfigurationType {
         nbt.setInteger(key, tile.getRawPriority());
     }
 
-    public static void pastePriority(NBTTagCompound nbt, String key, IFluxConfigurable tile) {
+    public static void pastePriority(NBTTagCompound nbt, String key, IFluxConnector tile) {
         tile.setRawPriority(nbt.getInteger(key));
     }
 
@@ -65,7 +64,7 @@ public class FluxConfigurationType {
         nbt.setBoolean(key, tile.getSurgeMode());
     }
 
-    public static void pastePrioritySetting(NBTTagCompound nbt, String key, IFluxConfigurable tile) {
+    public static void pastePrioritySetting(NBTTagCompound nbt, String key, IFluxConnector tile) {
         tile.setSurgeMode(nbt.getBoolean(key));
     }
 
@@ -75,7 +74,7 @@ public class FluxConfigurationType {
         nbt.setLong(key, tile.getRawLimit());
     }
 
-    public static void pasteTransfer(NBTTagCompound nbt, String key, IFluxConfigurable tile) {
+    public static void pasteTransfer(NBTTagCompound nbt, String key, IFluxConnector tile) {
         tile.setRawLimit(nbt.getLong(key));
     }
 
@@ -85,16 +84,16 @@ public class FluxConfigurationType {
         nbt.setBoolean(key, tile.getDisableLimit());
     }
 
-    public static void pasteTransferSetting(NBTTagCompound nbt, String key, IFluxConfigurable tile) {
+    public static void pasteTransferSetting(NBTTagCompound nbt, String key, IFluxConnector tile) {
         tile.setDisableLimit(nbt.getBoolean(key));
     }
 
     public interface ICopyMethod {
-        <T extends IFluxConnector & IFluxConfigurable> void copyFromTile(NBTTagCompound tag, String key, T tile);
+        void copyFromTile(NBTTagCompound tag, String key, IFluxConnector tile);
     }
 
     public interface IPasteMethod {
-        <T extends IFluxConnector & IFluxConfigurable> void pasteToTile(NBTTagCompound tag, String key, T tile);
+        void pasteToTile(NBTTagCompound tag, String key, IFluxConnector tile);
     }
 
 }

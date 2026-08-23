@@ -9,6 +9,7 @@ import sonar.fluxnetworks.FluxNetworks;
 import sonar.fluxnetworks.api.gui.EnumFeedbackInfo;
 import sonar.fluxnetworks.api.gui.EnumNavigationTabs;
 import sonar.fluxnetworks.api.network.INetworkConnector;
+import sonar.fluxnetworks.api.tiles.IFluxConnector;
 import sonar.fluxnetworks.client.gui.GuiFluxAdminHome;
 import sonar.fluxnetworks.client.gui.GuiFluxConfiguratorHome;
 import sonar.fluxnetworks.client.gui.GuiFluxConnectorHome;
@@ -17,7 +18,6 @@ import sonar.fluxnetworks.client.gui.tab.*;
 import sonar.fluxnetworks.common.item.ItemAdminConfigurator;
 import sonar.fluxnetworks.common.item.ItemConfigurator;
 import sonar.fluxnetworks.common.registry.RegistrySounds;
-import sonar.fluxnetworks.common.tileentity.TileFluxCore;
 
 import java.io.IOException;
 import java.util.List;
@@ -94,8 +94,8 @@ public abstract class GuiTabCore extends GuiFluxCore {
     public static void switchTab(EnumNavigationTabs tab, EntityPlayer player, INetworkConnector connector) {
         switch (tab) {
             case TAB_HOME:
-                if (connector instanceof TileFluxCore) {
-                    FMLCommonHandler.instance().showGuiScreen(new GuiFluxConnectorHome(player, (TileFluxCore) connector));
+                if (connector instanceof IFluxConnector) {
+                    FMLCommonHandler.instance().showGuiScreen(new GuiFluxConnectorHome(player, (IFluxConnector) connector));
                 } else if (connector instanceof ItemAdminConfigurator.AdminConnector) {
                     FMLCommonHandler.instance().showGuiScreen(new GuiFluxAdminHome(player, connector));
                 } else if (connector instanceof ItemConfigurator.NetworkConnector) {
